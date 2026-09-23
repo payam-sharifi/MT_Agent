@@ -3,7 +3,7 @@ name: Deploy MT_Agent to Incus Container
 on:
   push:
     branches:
-      - main
+      - master
 
 jobs:
   deploy:
