@@ -1,0 +1,34 @@
+name: Deploy MT_Agent to Incus Container
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy directly inside Incus Container
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 22
+          script: |
+            incus exec hermes-agent -- bash -c '
+              set -e
+              echo "=== 1. Pulling latest code ==="
+              cd /root/.hermes
+              git pull origin main
+
+              echo "=== 2. Updating tools & patches ==="
+              cd /root/.hermes/hermes-agent
+              cp /root/.hermes/deploy/tools/*.py tools/
+              git apply /root/.hermes/deploy/easywebbuilder.patch 2>/dev/null || true
+
+              echo "=== 3. Restarting Hermes Gateway ==="
+              pm2 restart hermes-gateway
+              echo "=== Deploy Completed Successfully! ==="
+            '
