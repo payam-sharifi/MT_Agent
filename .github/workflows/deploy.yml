@@ -21,7 +21,7 @@ jobs:
               set -e
               echo "=== 1. Pulling latest code ==="
               cd /root/.hermes
-              git pull origin main
+              git pull origin master
 
               echo "=== 2. Updating tools & patches ==="
               cd /root/.hermes/hermes-agent
