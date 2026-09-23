@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  hermes:
+    image: ghcr.io/nousresearch/hermes-agent:local
+    container_name: hermes-agent
+    restart: unless-stopped
+    ports:
+      - "8642:8642"
+    env_file:
+      - .env
+    volumes:
+      - ~/.hermes:/home/node/.hermes
+

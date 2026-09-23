@@ -1,0 +1,4 @@
+# Local extras for this Hermes home (not part of upstream hermes-agent pins).
+# Install into the Hermes venv:
+#   ~/.hermes/bin/uv pip install --python ~/.hermes/hermes-agent/venv/bin/python -r ~/.hermes/requirements-local.txt
+supabase==2.31.0
