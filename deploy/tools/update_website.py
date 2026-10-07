@@ -36,7 +36,7 @@ UPDATE_WEBSITE_CONTENT_SCHEMA = {
     "name": "update_website_content",
     "description": (
         "Merge edits into the active website's content and publish them. "
-        "Preserves fields you do not send. Returns https://[slug].appventuregmbh.com. "
+        "Preserves fields you do not send. Returns https://[slug].easywebbuilder.de. "
         "identifier is the Telegram ID or WhatsApp phone from the lookup line."
     ),
     "parameters": {

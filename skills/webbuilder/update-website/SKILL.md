@@ -5,7 +5,7 @@ description: Update the active website content and Impressum in Supabase.
 
 # Update the active website
 
-For a sender who already has a website, save edits with `update_website_content`. Legal details use `update_legal_impressum`. The live page is `https://[slug].appventuregmbh.com`.
+For a sender who already has a website, save edits with `update_website_content`. Legal details use `update_legal_impressum`. The live page is `https://[slug].easywebbuilder.de`.
 
 ## When to Use
 

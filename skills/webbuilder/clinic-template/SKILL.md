@@ -92,7 +92,7 @@ Remove a section the customer no longer wants with `remove_clinic_section`. Hero
 
 ## Finish
 
-After saving, send the `preview_url` (`https://[slug].appventuregmbh.com`) and ask them to look at it and confirm. Offer the next not-yet-added section only once, briefly.
+After saving, send the `preview_url` (`https://[slug].easywebbuilder.de`) and ask them to look at it and confirm. Offer the next not-yet-added section only once, briefly.
 
 ## Do not
 

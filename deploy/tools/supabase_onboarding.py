@@ -227,7 +227,7 @@ LIST_WEBSITES_SCHEMA = {
     "name": "list_user_websites",
     "description": (
         "List every website owned by this sender with business name and "
-        "https://[slug].appventuregmbh.com preview URL. Use when they ask to list or switch sites."
+        "https://[slug].easywebbuilder.de preview URL. Use when they ask to list or switch sites."
     ),
     "parameters": {
         "type": "object",
@@ -240,7 +240,7 @@ CREATE_WEBSITE_SCHEMA = {
     "name": "create_website",
     "description": (
         "Create another website for this sender from a business name, make it the active site, "
-        "and return https://[slug].appventuregmbh.com. The slug is sanitized and kept unique."
+        "and return https://[slug].easywebbuilder.de. The slug is sanitized and kept unique."
     ),
     "parameters": {
         "type": "object",
@@ -257,7 +257,7 @@ SWITCH_WEBSITE_SCHEMA = {
     "name": "switch_active_website",
     "description": (
         "Set which of this sender's websites is being edited. Match by slug or business name. "
-        "Returns the selected https://[slug].appventuregmbh.com link."
+        "Returns the selected https://[slug].easywebbuilder.de link."
     ),
     "parameters": {
         "type": "object",

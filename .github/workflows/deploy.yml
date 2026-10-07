@@ -27,6 +27,8 @@ jobs:
               cd /root/.hermes/hermes-agent
               cp /root/.hermes/deploy/tools/*.py tools/
               git apply /root/.hermes/deploy/easywebbuilder.patch 2>/dev/null || true
+              # The patch may already be applied with the old domain; make sure the gateway text uses the new one.
+              sed -i "s/appventuregmbh\.com/easywebbuilder.de/g" gateway/run_inbound.py
 
               echo "=== 3. Restarting Hermes Gateway ==="
               pm2 restart hermes-gateway

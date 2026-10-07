@@ -26,7 +26,7 @@ index 3c5028cb61..82938ff0dc 100644
 +    prefix = (
 +        f"[easyWebBuilder lookup] platform={platform} sender_id={sender_id}. "
 +        f"Live preview: {preview}. Edit only the active website. "
-+        "After every change, send https://[slug].appventuregmbh.com and ask the user to confirm.\n\n"
++        "After every change, send https://[slug].easywebbuilder.de and ask the user to confirm.\n\n"
 +    )
 +    return prefix + (message_text or "")
 +

@@ -1,6 +1,6 @@
-"""Supabase storage for easyWebBuilder sites on appventuregmbh.com.
+"""Supabase storage for easyWebBuilder sites on easywebbuilder.de.
 
-Live URLs are always https://[slug].appventuregmbh.com.
+Live URLs are always https://[slug].easywebbuilder.de.
 users.active_website_id is used after deploy/sql/multi_tenant_websites.sql.
 Until that migration, each user has one website (websites.user_id is unique).
 """
@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 SUPABASE_URL = "https://rgqrpzsbblflxghyahnx.supabase.co"
 SUPABASE_KEY = "sb_publishable_nyxKnB8H3IhRj41DBzpw3w_64wl_dbZ"
-PREVIEW_DOMAIN = "appventuregmbh.com"
+PREVIEW_DOMAIN = "easywebbuilder.de"
 
 _UMLAUTS = str.maketrans(
     {
@@ -785,7 +785,7 @@ def build_lookup_prefix(account: dict) -> str:
         "Use update_legal_impressum for owner name, address, tax ID / USt-IdNr, and legal form. "
         "Use list_user_websites, switch_active_website, and create_website to manage several sites. "
         "Pass this sender_id and platform. Never invent them. "
-        "After every create or edit, send the https://[slug].appventuregmbh.com link and ask the user to confirm. "
+        "After every create or edit, send the https://[slug].easywebbuilder.de link and ask the user to confirm. "
         "Reply in the user's language. Never use another domain."
     )
     return " ".join(parts)
