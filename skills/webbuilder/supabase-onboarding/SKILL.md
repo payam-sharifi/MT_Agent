@@ -1,30 +1,24 @@
 ---
 name: supabase-onboarding
-description: Look up Telegram/WhatsApp users in Supabase, then register if new.
+description: Welcome a Telegram/WhatsApp sender and switch or create their websites.
 ---
 
-# Supabase Onboarding
+# Websites on appventuregmbh.com
 
-Every Telegram/WhatsApp turn already searches `public.users` by `telegram_id` or `phone`.
-If the current message says **NOT FOUND**, start registration. Do not wait.
+The gateway already searched Supabase. A missing user now has an account and a first website. Do not call a registration tool.
 
 ## When to Use
 
-- Telegram/WhatsApp chat.
-- The lookup prefix or `lookup_user` tool says `found=false`.
-- Don't use for later content edits (`update-website` / `update_website_data`).
+- The lookup says **NEW ACCOUNT**. Welcome them and send the preview link.
+- They ask to list sites, switch site, or create another website.
+- The lookup says no active website is selected.
 
 ## Procedure
 
-1. Trust the inbound lookup (`[easyWebBuilder lookup] ...`). You may also call `lookup_user(sender_id, platform)`.
-2. If **FOUND**: skip onboarding, help with their site.
-3. If **NOT FOUND**:
-   - Greet in the user's language.
-   - Ask for business/website name (`business_name`), owner full name (`owner_name`), and type of activity.
-   - Suggest a `subdomain` (lowercase ASCII, hyphens) and confirm it.
-   - Call `check_and_register_user(sender_id, platform, business_name, owner_name, subdomain)`.
-   - Infer `theme` from the business name / activity (`clinical`, `luxury`, `zen`, `corporate`, or `default`) and call `update_website_data` with `{ "theme": "..." }` on the root of `site_data`.
-4. Confirm registration in chat.
+1. Read `sender_id` and `platform` from `[easyWebBuilder lookup]`. Never invent them.
+2. **NEW ACCOUNT:** greet in the user's language. Send the preview URL from the lookup. Ask for the business name, services, or changes. Stop there.
+3. **List or switch:** call `list_user_websites(sender_id, platform)`. Show each business name with `https://[slug].appventuregmbh.com`. After they choose, call `switch_active_website` with the slug or business name and confirm that preview URL.
+4. **Another website:** if the current slug is still `site-####` and has no business name, the first name belongs on that site via `update_website_content`, not a second site. If they already have a named site and want another, ask for the new business name, then call `create_website(sender_id, platform, business_name)`.
+5. If `create_website` returns `only_one_website`, keep editing the current site and send its preview URL. Do not invent a second link.
 
-Use `sender_id` and `platform` from the lookup line. Never invent them.
-Do not register on the greeting turn before you have the three business fields.
+Preview links are only `https://[slug].appventuregmbh.com`.

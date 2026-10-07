@@ -2,53 +2,43 @@ diff --git a/gateway/run_inbound.py b/gateway/run_inbound.py
 index 3c5028cb61..82938ff0dc 100644
 --- a/gateway/run_inbound.py
 +++ b/gateway/run_inbound.py
-@@ -35,6 +35,39 @@ if TYPE_CHECKING:  # string annotations only; never imported at runtime (cycle)
+@@ -35,6 +35,31 @@ if TYPE_CHECKING:  # string annotations only; never imported at runtime (cycle)
  logger = logging.getLogger("gateway.run")
  
  
 +def _prefix_supabase_lookup(event: MessageEvent, message_text: str) -> str:
-+    """Put the Supabase users-table lookup on this turn's model-facing message.
++    """Put the Supabase account lookup on this turn's model-facing message.
 +
-+    The gateway already searched public.users; if the sender is missing, the agent
-+    must start registration even when the Telegram session has long unrelated history.
++    attach_inbound_sender_context already created a missing user and website.
++    Prefer the prefix stored on the event so the tool layer owns the wording.
 +    """
 +    meta = getattr(event, "metadata", None)
 +    sender = meta.get("supabase_sender") if isinstance(meta, dict) else None
 +    if not isinstance(sender, dict) or not sender.get("sender_id"):
 +        return message_text
++    custom = sender.get("lookup_prefix")
++    if isinstance(custom, str) and custom.strip():
++        prefix = custom if custom.endswith("\n") else custom + "\n\n"
++        return prefix + (message_text or "")
 +    sender_id = sender["sender_id"]
 +    platform = sender.get("platform") or "telegram"
-+    if sender.get("registered"):
-+        prefix = (
-+            f"[easyWebBuilder lookup] Searched Supabase users for {platform} "
-+            f"sender_id={sender_id}: FOUND. Skip registration and help with their site. "
-+            "To change prices, add services, edit working hours, FAQ, site text, or theme, "
-+            f"call update_website_data with identifier={sender_id}, platform={platform}, "
-+            "and site_data_update. Put theme on the root (clinical, luxury, zen, corporate, default). "
-+            "Content goes in site_data_update.sections (hero, services, working_hours, faq).\n\n"
-+        )
-+    else:
-+        prefix = (
-+            f"[easyWebBuilder lookup] Searched Supabase table users for {platform} "
-+            f"sender_id={sender_id}: NOT FOUND. This is a new user. Ignore unrelated prior "
-+            f"chat history. Greet them in their language, then ask for business/website name, "
-+            f"owner full name, and type of activity. Suggest a subdomain from the business name. "
-+            f"When you have those, call check_and_register_user with sender_id={sender_id}, "
-+            f"platform={platform}, business_name, owner_name, and subdomain.\n\n"
-+        )
++    preview = sender.get("preview_url") or ""
++    prefix = (
++        f"[easyWebBuilder lookup] platform={platform} sender_id={sender_id}. "
++        f"Live preview: {preview}. Edit only the active website. "
++        "After every change, send https://[slug].appventuregmbh.com and ask the user to confirm.\n\n"
++    )
 +    return prefix + (message_text or "")
 +
 +
  class GatewayInboundMixin:
      """Inbound message pipeline (_handle_message, text/media preparation, durable-turn markers, plugin injection) for GatewayRunner."""
  
-@@ -1195,6 +1228,19 @@ class GatewayInboundMixin:
+@@ -1195,6 +1220,17 @@ class GatewayInboundMixin:
          if _admitted is None:
              return None
          event, source, is_internal = _admitted
-+        # easyWebBuilder: identify Telegram/WhatsApp senders only. Do NOT register
-+        # them here — the agent greets, collects business details, then calls
-+        # check_and_register_user.
++        # Identify Telegram/WhatsApp senders and ensure they have a website.
 +        if not is_internal:
 +            _onboard_platform = str(
 +                getattr(getattr(source, "platform", None), "value", "") or ""
@@ -62,7 +52,7 @@ index 3c5028cb61..82938ff0dc 100644
          # TERMINAL-DECLINE LATCH TEARDOWN. Deliberately placed AFTER admission,
          # not on the adapter's raw inbound: profile routing, the ignored-channel
          # guard, plugin hooks and user authorization all reject events above,
-@@ -1341,6 +1387,7 @@ class GatewayInboundMixin:
+@@ -1341,6 +1377,7 @@ class GatewayInboundMixin:
          # After the sender-prefix so the prefix applies only to the trigger message, not the backfill.
          if getattr(event, "channel_context", None):
              message_text = f"{event.channel_context}\n\n[New message]\n{message_text}"

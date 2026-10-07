@@ -1,130 +1,57 @@
 ---
 name: update-website
-description: Update site_data theme and sections in Supabase.
+description: Update the active website content and Impressum in Supabase.
 ---
 
-# Update Website
+# Update the active website
 
-For **registered** Telegram/WhatsApp users, persist website edits with `update_website_data`. Content lives in `site_data.sections`. Visual style lives in root `site_data.theme`. Do not put hero/services/hours/FAQ or `theme` inside each other.
+For a sender who already has a website, save edits with `update_website_content`. Legal details use `update_legal_impressum`. The live page is `https://[slug].appventuregmbh.com`.
 
 ## When to Use
 
-- User is already registered (`FOUND` / `lookup_user` `found=true`).
-- They want to change prices, add or edit services, update working hours, hero text, FAQ, look/colors, or the site theme.
-- After the first business details are known (name, activity, services), set `theme` if it is missing.
-- Don't use for first-time registration (`check_and_register_user`).
+- The lookup says **FOUND** and an active website is set.
+- They give a business name, hero text, services, prices, hours, FAQ, contact details, or a look/theme.
+- They give owner name, address, tax ID / USt-IdNr, or legal form.
 
-## site_data shape
+Do not use this to create an additional website (`create_website`).
+
+## content shape
+
+Pass only the fields they changed. The tool merges. Services merge by `name`. FAQ items merge by `question`.
 
 ```json
 {
-  "theme": "zen",
-  "sections": [
-    { "type": "hero", "title": "...", "subtitle": "...", "image_url": "..." },
-    { "type": "services", "items": [{ "name": "...", "description": "...", "price": "..." }] },
-    { "type": "working_hours", "text": "..." },
-    { "type": "faq", "items": [{ "question": "...", "answer": "..." }] }
-  ]
+  "hero": { "title": "", "subtitle": "", "cta_button": "" },
+  "services": [{ "name": "", "price": "", "description": "" }],
+  "contact": { "address": "", "phone": "", "opening_hours": "" },
+  "faq": [{ "question": "", "answer": "" }]
 }
 ```
 
-`theme` is a root field (not a section). Allowed values only:
-
-| theme | When | Look |
-|---|---|---|
-| `clinical` | Doctors, clinics, dentistry, medical / therapeutic services | White + blue, clean |
-| `luxury` | Beauty salons, hair, jewelry, luxury brands | Black / gold / cream |
-| `zen` | Massage, spa, yoga, calming wellness | Olive / earth / soft dark |
-| `corporate` | Lawyers, consultants, real estate, service companies | Navy / gray, formal |
-| `default` | Other jobs, or occupation unknown | Minimal white / gray |
-
-Valid `type` values only:
-
-| type | fields |
-|---|---|
-| `hero` | `title`, `subtitle`, `image_url` |
-| `services` | `items`: `[{ name, description, price }]` |
-| `working_hours` | `{ text }` **or** `{ open, close, days }` |
-| `faq` | `items`: `[{ question, answer }]` |
-
-One section per `type`. To add a new block (FAQ, hours, …), append a new object to `sections`. Never replace the whole array with only the new section.
+`business_name` is a separate argument. On a placeholder slug (`site-1234`) it also sets the public slug. An existing named slug stays put.
 
 ## Procedure
 
-1. Take `identifier` and `platform` from the inbound lookup (`sender_id` + `telegram` or `whatsapp`). Never invent them.
-2. Infer or update `theme` (see below) and put it on the **root** of `site_data_update`.
-3. Put **only the changed section(s)** in `site_data_update.sections`. The tool merges by `type`. A theme-only call may omit `sections`.
-4. Call `update_website_data(identifier, platform, site_data_update)`.
-5. If `status=success`, confirm in the user's language. If `error`, say so — do not claim the site was updated.
-
-## Theme
-
-Guess the occupation from the business name, activity, or services. Set `theme` on first content save and whenever the occupation becomes clearer. If the user asks for look or color, map that request — do not invent a new theme name.
-
-| User / business cues | `theme` |
-|---|---|
-| پزشک، کلینیک، دندان‌پزشکی، درمان، سفید و آبی، تم پزشکی | `clinical` |
-| سالن زیبایی، آرایشگاه، جواهر، لوکس، شیک، طلایی، مشکی | `luxury` |
-| ماساژ، اسپا، یوگا، آرامش، سبز زیتونی، تم تیره ملایم | `zen` |
-| وکیل، مشاور، املاک، شرکت خدماتی، رسمی، سرمه‌ای | `corporate` |
-| نامشخص، ساده، مینیمال، سایر | `default` |
-
-User look requests: «تم تیره/شیک» → `luxury` unless the business is clearly massage/spa (`zen`). «تم پزشکی» → `clinical`. «رسمی/شرکتی» → `corporate`.
+1. Take `identifier` and `platform` from the lookup (`sender_id`, `telegram` or `whatsapp`). Never invent them.
+2. If the lookup says to choose a website first, do that before any save.
+3. Call `update_website_content(identifier, platform, content, business_name)`.
+4. For legal details, call `update_legal_impressum(sender_id, platform, owner_name, address, tax_number, legal_form)` with only the fields they gave.
+5. If `status` is `success`, reply in the user's language with the tool's `preview_url` and ask them to confirm. If `error`, say it was not saved.
 
 ## Mapping
 
-| User says | `site_data_update` |
+| User says | Call |
 |---|---|
-| عنوان / هیرو / زیرعنوان / عکس هیرو | `{ "sections": [{ "type": "hero", "title": "...", "subtitle": "...", "image_url": "..." }] }` |
-| قیمت / خدمت جدید / ویرایش خدمت | `{ "sections": [{ "type": "services", "items": [{ "name": "...", "description": "...", "price": "..." }] }] }` |
-| ساعت کاری | `{ "sections": [{ "type": "working_hours", "text": "..." }] }` or `{ "open", "close", "days" }` |
-| سوالات متداول / FAQ / بخش جدید | `{ "sections": [{ "type": "faq", "items": [{ "question": "...", "answer": "..." }] }] }` |
-| ظاهر / رنگ / تم سایت | `{ "theme": "luxury" }` (or clinical / zen / corporate / default) |
+| Business name on the current site | `business_name`, and `content.hero.title` when they are naming the page |
+| Headline, subtitle, button | `content.hero` |
+| Price or service | `content.services` item `{name, price, description}` |
+| Address, phone | `content.contact` |
+| Opening hours | `content.contact.opening_hours` |
+| FAQ | `content.faq` item `{question, answer}` |
+| Owner, address, tax ID, legal form | `update_legal_impressum` |
+| Look or color | `theme`: `luxury` (beauty, dark, gold), `zen` (spa, massage), `corporate` (formal), `default` (otherwise). Doctors, dentists and clinics use the premium clinic template: `clinic-premium` (see the clinic-template skill; it is set automatically for medical sites) |
+| Doctors, check-up packages, about us, locations, extra FAQ on a clinic site | `save_clinic_section` (skill clinic-template) |
 
-A single service/FAQ item is merged by `name` / `question` (update if it exists, otherwise append). A new `type` that is not in `sections` yet is appended.
+## Clinic sites
 
-## Examples
-
-```
-User: عنوان سایت بشه مرکز ماساژ محمد
-→ update_website_data(..., site_data_update={
-  "theme": "zen",
-  "sections": [{ "type": "hero", "title": "مرکز ماساژ محمد" }]
-})
-```
-
-```
-User: سایتم تم تیره و شیک داشته باشه
-→ update_website_data(..., site_data_update={ "theme": "luxury" })
-```
-
-```
-User: قیمت ماساژ سنگ رو بذار ۳۵۰ هزار
-→ update_website_data(..., site_data_update={
-  "sections": [{ "type": "services", "items": [{ "name": "ماساژ سنگ", "price": "350000" }] }]
-})
-```
-
-```
-User: یک خدمت جدید اضافه کن: ماساژ صورت، ۴۰۰ هزار
-→ update_website_data(..., site_data_update={
-  "sections": [{ "type": "services", "items": [{ "name": "ماساژ صورت", "price": "400000" }] }]
-})
-```
-
-```
-User: ساعت کاری شنبه تا پنجشنبه ۱۰ تا ۲۰
-→ update_website_data(..., site_data_update={
-  "sections": [{ "type": "working_hours", "days": "شنبه تا پنجشنبه", "open": "10:00", "close": "20:00" }]
-})
-```
-
-```
-User: بخش سوالات متداول اضافه کن. سوال: نوبت چطور بگیرم؟ جواب: در واتساپ پیام بدهید.
-→ update_website_data(..., site_data_update={
-  "sections": [{
-    "type": "faq",
-    "items": [{ "question": "نوبت چطور بگیرم؟", "answer": "در واتساپ پیام بدهید." }]
-  }]
-})
-```
+If the site is for a doctor, dentist or clinic, follow the `clinic-template` skill. Introduce the optional template sections to the customer, add only the ones they choose, fill them fully, and never invent facts.
