@@ -420,6 +420,13 @@ def _stat_hero(raw: dict) -> dict | None:
 def merge_items(section: str, current: list, incoming: list, replace: bool = False, remove: list | None = None) -> list:
     """Merge `incoming` into `current` by the section's key (name or question)."""
     items = [] if replace else [dict(x) for x in current if isinstance(x, dict)]
+    if replace:
+        # A new list must not wipe the customer's pictures.
+        images = {item_key(section, x): x["image"] for x in current if isinstance(x, dict) and x.get("image")}
+        incoming = [
+            {**x, "image": images[item_key(section, x)]} if item_key(section, x) in images and not x.get("image") else x
+            for x in incoming
+        ]
     for item in incoming:
         key = item_key(section, item)
         for index, existing in enumerate(items):

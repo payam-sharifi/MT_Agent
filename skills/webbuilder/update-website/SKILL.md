@@ -48,6 +48,7 @@ Pass only the fields they changed. The tool merges. Services merge by `name`. FA
 | Address, phone | `content.contact` |
 | Opening hours | `content.contact.opening_hours` |
 | FAQ | `content.faq` item `{question, answer}` |
+| A photo or image link, a logo | `set_site_image` (skill clinic-template, Pictures) |
 | Owner, address, tax ID, legal form | `update_legal_impressum` |
 | Look or color | `theme`: `luxury` (beauty, dark, gold), `zen` (spa, massage), `corporate` (formal), `default` (otherwise). Doctors, dentists and clinics use the premium clinic template: `clinic-premium` (see the clinic-template skill; it is set automatically for medical sites) |
 | Doctors, check-up packages, about us, locations, extra FAQ on a clinic site | `save_clinic_section` (skill clinic-template) |
