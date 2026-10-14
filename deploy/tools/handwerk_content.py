@@ -1,7 +1,9 @@
-"""Content rules for the handwerk-premium renovation template (VELORA).
+"""Content rules for the handwerk-premium renovation template.
 
-Pure functions. A section is shown only when it exists in site_data and has
-real customer facts. Never invent project names, prices, ratings or addresses.
+New sites get the FULL template with default sample content (demo=true) so the
+customer sees every section even if they only gave a company name. They can
+then ask to change, add, or remove parts. Never invent extra facts on top of
+those defaults when the customer later personalizes a section.
 """
 
 from __future__ import annotations
@@ -21,7 +23,11 @@ _HANDWERK_WORDS = (
     "maler", "fliesen", "innenausbau", "wohnbau", "bauunternehmen", "renovation",
     "remodel", "construction", "drywall", "painter", "tiler", "hausrenovierung",
     "altbau", "modernisierung", "fenster", "türen", "tueren",
+    "klempner", "plumber", "plumbing", "heizung", "sanitaer", "sanitär",
+    "installateur", "installation", "shk", "rohr", "heizungsbauer",
+    "wasserinstallateur", "heating",
     "بازسازی", "نوسازی", "ساختمان", "نقاشی",
+    "لوله", "لوله‌کش", "لوله کش", "لوله کشی", "تاسیسات",
 )
 
 _UPGRADEABLE_THEMES = {"", "default", "services", "handwerk", "zen", "none"}
@@ -118,7 +124,74 @@ CATALOG: dict[str, dict[str, Any]] = {
         "needs": [],
         "optional": ["about"],
     },
+    "materials": {
+        "label": "Materialien / Ausstattung",
+        "core": False,
+        "pitch": "Catalog of materials and finishes with photos.",
+        "needs": ["title (customer or keep default)", "spec"],
+        "optional": ["image"],
+    },
+    "working_hours": {
+        "label": "Öffnungszeiten",
+        "core": False,
+        "pitch": "Opening hours shown in the header and contact block.",
+        "needs": ["text or items [{days, hours}]"],
+        "optional": [],
+    },
 }
+
+CHANGEABLE = (
+    {"id": "colors", "pitch": "Brand / template colors (primary color)."},
+    {"id": "photos", "pitch": "Logo, hero, service, project, team, quality, and material photos."},
+    {"id": "company", "pitch": "Company name, phone, email, address, Google map."},
+    {"id": "hero", "pitch": "Headline, subtitle, button, badge, stats."},
+    {"id": "services", "pitch": "Services: names, texts, prices, photos."},
+    {"id": "guarantees", "pitch": "Promise / guarantee cards."},
+    {"id": "projects", "pitch": "Reference projects."},
+    {"id": "reviews", "pitch": "Google-style reviews (only real quotes when personalizing)."},
+    {"id": "quality", "pitch": "Behind-the-scenes / quality block."},
+    {"id": "team", "pitch": "Team names, roles, photos."},
+    {"id": "before_after", "pitch": "Before / after photos."},
+    {"id": "financing", "pitch": "Monthly-rate calculator."},
+    {"id": "process", "pitch": "How a project runs (steps)."},
+    {"id": "faq", "pitch": "FAQ questions and answers."},
+    {"id": "contact", "pitch": "Contact, coverage, branches, map."},
+    {"id": "working_hours", "pitch": "Opening hours."},
+    {"id": "materials", "pitch": "Materials catalog."},
+    {"id": "footer", "pitch": "Footer company line."},
+    {"id": "remove_section", "pitch": "Remove any section they do not need."},
+    {"id": "add_section", "pitch": "Add a section back if they removed it."},
+)
+
+FULL_SECTION_TYPES = (
+    "hero",
+    "services",
+    "guarantees",
+    "projects",
+    "reviews",
+    "quality",
+    "team",
+    "before_after",
+    "financing",
+    "process",
+    "faq",
+    "contact",
+    "materials",
+    "working_hours",
+    "footer",
+)
+
+HOW_TO_INTRODUCE = (
+    "Show the COMPLETE template first with default values — even if the customer only gave a "
+    "company name, said they renovate homes, or said they are a plumber. Do not wait for a full "
+    "brief. Call activate_handwerk_template so every section is on the page. Send the preview "
+    "link, then explain in their language: the full template is live with starter content; they "
+    "can change colors, photos, texts, hours, map, reviews, and every section; they can ask to "
+    "remove or add parts to personalize it. Proactively list what you can change (use "
+    "`changeable`). After any edit, send the preview URL, wait for explicit تایید / YES, then "
+    "call record_preview_confirmation with confirmed=true. Never invent extra facts when they "
+    "later personalize a section — ask for real names, reviews, addresses."
+)
 
 SECTION_TYPES = tuple(CATALOG)
 ITEM_KEYS = {
@@ -131,18 +204,47 @@ ITEM_KEYS = {
     "process": ("items", "title"),
     "faq": ("items", "question"),
     "contact": ("items", "name"),
+    "materials": ("items", "title"),
 }
 
 HANDWERK_ONLY = {
     "guarantees", "projects", "reviews", "quality", "team",
-    "before_after", "financing", "process", "contact", "footer",
+    "before_after", "financing", "process", "contact", "footer", "materials",
 }
 
 
 def is_handwerk_business(business_type: Any, business_name: Any = "") -> bool:
-    haystack = str(business_type or "").strip() or str(business_name or "")
-    haystack = haystack.lower()
+    haystack = f"{business_type or ''} {business_name or ''}".strip().lower()
     return any(word in haystack for word in _HANDWERK_WORDS)
+
+
+def seed_full_template(site_data: dict | None, business_name: str = "") -> dict:
+    """Put every template section on the page so defaults (demo) fill empty ones."""
+    data = dict(site_data) if isinstance(site_data, dict) else {}
+    data["demo"] = True
+    data["using_defaults"] = True
+    data["theme"] = HANDWERK_THEME
+    sections = [section for section in (data.get("sections") or []) if isinstance(section, dict)]
+    existing = {str(section.get("type") or "").strip().lower() for section in sections}
+    name = str(business_name or data.get("business_name") or "").strip()
+    if name:
+        data["business_name"] = name
+    for section in FULL_SECTION_TYPES:
+        if section in existing:
+            continue
+        stub: dict[str, Any] = {"type": section}
+        if section == "hero" and name:
+            stub["title"] = name
+        sections.append(stub)
+    if name:
+        for section in sections:
+            if str(section.get("type") or "").strip().lower() != "hero":
+                continue
+            if not str(section.get("title") or "").strip():
+                section["title"] = name
+            break
+    data["sections"] = sections
+    return data
 
 
 def should_upgrade_handwerk_theme(current_theme: Any) -> bool:
@@ -235,6 +337,15 @@ def _before(raw: dict) -> tuple:
     return out, []
 
 
+def _material(raw: dict) -> tuple:
+    title = text(raw.get("title") or raw.get("name"))
+    if not title:
+        return None, ["title"]
+    out = {"title": title}
+    _put(out, "spec", text(raw.get("spec") or raw.get("description") or raw.get("detail"), 200))
+    return out, []
+
+
 def _faq(raw: dict) -> tuple:
     question = text(raw.get("question") or raw.get("q"), 300)
     answer = text(raw.get("answer") or raw.get("a"), 1200)
@@ -267,6 +378,7 @@ _ITEM_NORMALISERS = {
     "process": _titled,
     "faq": _faq,
     "contact": _branch,
+    "materials": _material,
 }
 
 
@@ -292,6 +404,14 @@ def normalize_section(section: str, data: Any) -> dict:
             if value and label:
                 stats.append({"value": plain(value), "label": label})
         _put(clean, "stats", stats[:4])
+    elif section == "working_hours":
+        _put(clean, "text", text(data.get("text") or data.get("hours"), 400))
+        rows = []
+        for raw in _as_list(data.get("items") or data.get("hoursRows")):
+            days, hours = text(raw.get("days"), 80), text(raw.get("hours") or raw.get("open"), 80)
+            if days or hours:
+                rows.append({"days": days or "", "hours": hours or ""})
+        _put(clean, "items", rows)
     elif section in ("quality", "financing", "footer"):
         for field in ("subtitle", "about", "coverage", "hqAddress", "formNote"):
             _put(clean, field, text(data.get(field), 400))
@@ -359,7 +479,7 @@ def section_status(section: str, entry: dict | None) -> dict:
         return {"state": "not_added", "visible": False}
     if entry.get("enabled") is False or entry.get("active") is False:
         return {"state": "disabled", "visible": False}
-    if section in ("hero", "financing", "quality"):
+    if section in ("hero", "financing", "quality", "working_hours"):
         return {"state": "active", "visible": True}
     if section == "footer":
         visible = bool(entry.get("about"))
@@ -400,4 +520,9 @@ def overview(sections: list) -> dict:
                 "agent_should_write": suggestions(section, entry),
             }
         )
-    return {"template": HANDWERK_THEME, "sections": parts}
+    return {
+        "template": HANDWERK_THEME,
+        "sections": parts,
+        "changeable": list(CHANGEABLE),
+        "how_to_introduce": HOW_TO_INTRODUCE,
+    }

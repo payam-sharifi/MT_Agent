@@ -40,9 +40,34 @@ MAX_BYTES = 5 * 1024 * 1024  # bucket limit
 RESIZE_ABOVE_BYTES = 1_500_000
 MAX_SIDE = 2400
 
-TARGETS = ("logo", "hero", "about", "service", "doctor", "location")
-_NEEDS_ITEM = {"service": "services", "doctor": "doctors", "location": "locations"}
-_ITEM_FIELD = {"service": "name", "doctor": "name", "location": "name"}
+TARGETS = (
+    "logo",
+    "hero",
+    "about",
+    "service",
+    "doctor",
+    "location",
+    "project",
+    "team",
+    "quality",
+    "material",
+)
+_NEEDS_ITEM = {
+    "service": "services",
+    "doctor": "doctors",
+    "location": "locations",
+    "project": "projects",
+    "team": "team",
+    "material": "materials",
+}
+_ITEM_FIELD = {
+    "service": "name",
+    "doctor": "name",
+    "location": "name",
+    "project": "title",
+    "team": "name",
+    "material": "title",
+}
 
 
 class ImageError(Exception):
@@ -225,20 +250,20 @@ def _apply(site_data: dict, content_json: dict, target: str, item: str, url: str
             site_data.pop("logo_url", None)
         return
 
-    section_type = {"hero": "hero", "about": "about"}.get(target) or _NEEDS_ITEM[target]
+    section_type = {"hero": "hero", "about": "about", "quality": "quality"}.get(target) or _NEEDS_ITEM[target]
     entry = find_entry(sections, section_type)
     if entry is None:
-        if target == "hero":
-            entry = {"type": "hero"}
+        if target in ("hero", "quality"):
+            entry = {"type": section_type}
             sections.insert(0, entry)
         else:
             raise ImageError(
-                f"the {section_type} section does not exist yet. Add it with save_clinic_section first, "
-                "then set the picture."
+                f"the {section_type} section does not exist yet. Add it with save_clinic_section or "
+                "save_handwerk_section first, then set the picture."
             )
     entry = dict(entry)
 
-    if target in ("hero", "about"):
+    if target in ("hero", "about", "quality"):
         _set(entry, url)
     else:
         items = [dict(x) for x in entry.get("items") or [] if isinstance(x, dict)]
@@ -331,9 +356,9 @@ SET_SITE_IMAGE_SCHEMA = {
     "description": (
         "Put a picture on the customer's website, or remove one. Use it when the customer sends a photo or an image "
         "link and says where it goes. The photo is checked, stored, and published; the tool returns the preview link.\n"
-        "target: logo (header and footer), hero (big picture in the start section), about (photo above the "
-        "about-us cards), service (one service card, item = service name), doctor (item = doctor name), "
-        "location (item = location name).\n"
+        "target: logo, hero, about, quality (section photo), service (item = service name), "
+        "doctor (item = doctor name), location (item = location name), project (item = project title), "
+        "team (item = person name), material (item = material title).\n"
         "For a photo sent in chat, pass file_path exactly as shown in the message ('Image attached at: <path>'). "
         "Never guess a path. If several photos arrive, ask which one goes where. Section for service/doctor/location/"
         "about must exist already (save_clinic_section first). Only JPG, PNG and WebP."

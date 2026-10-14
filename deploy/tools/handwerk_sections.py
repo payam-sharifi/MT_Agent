@@ -10,6 +10,7 @@ from tools.handwerk_content import (
     CATALOG,
     HANDWERK_ONLY,
     HANDWERK_THEME,
+    HOW_TO_INTRODUCE,
     ITEM_KEYS,
     SECTION_TYPES,
     find_entry,
@@ -18,6 +19,7 @@ from tools.handwerk_content import (
     normalize_section,
     overview,
     section_status,
+    seed_full_template,
     suggestions,
 )
 from tools.clinic_content import find_entry as _find
@@ -76,7 +78,7 @@ def _activation_update(website: dict, site_data: dict) -> dict:
     config["theme"] = HANDWERK_THEME
     config["template"] = HANDWERK_THEME
     site_data["theme"] = HANDWERK_THEME
-    site_data.pop("demo", None)
+    site_data["demo"] = True
     update: dict[str, Any] = {"theme_config": config}
     if not str(website.get("business_type") or "").strip():
         update["business_type"] = "handwerk"
@@ -121,11 +123,9 @@ def handwerk_overview(sender_id: str, platform: str) -> dict:
     result = overview(_sections_of(site_data))
     result.update(_result_base(website))
     result["template_active"] = _is_active(website)
+    result["using_defaults"] = bool(site_data.get("demo"))
     result["business_name"] = website.get("business_name") or site_data.get("business_name") or ""
-    result["how_to_introduce"] = (
-        "Tell the customer in their language what each optional section does (use `pitch`), then ask which ones "
-        "they want. Add only the ones they choose. Never invent project names, reviews, prices or addresses."
-    )
+    result["how_to_introduce"] = HOW_TO_INTRODUCE
     return result
 
 
@@ -133,7 +133,10 @@ def activate_handwerk(sender_id: str, platform: str) -> dict:
     website, error = _open_website(sender_id, platform)
     if error:
         return error
-    site_data = _load_json_object(website.get("site_data"))
+    site_data = seed_full_template(
+        _load_json_object(website.get("site_data")),
+        str(website.get("business_name") or ""),
+    )
     already = _is_active(website)
     extra = _activation_update(website, site_data)
     _ensure_hero(site_data, website)
@@ -141,7 +144,19 @@ def activate_handwerk(sender_id: str, platform: str) -> dict:
     website = {**website, **extra}
     result = overview(_sections_of(site_data))
     result.update(_result_base(website))
-    result.update({"status": "success", "template_active": True, "was_active": already})
+    result.update(
+        {
+            "status": "success",
+            "template_active": True,
+            "was_active": already,
+            "using_defaults": True,
+            "ask_user": (
+                "Send the preview URL. Explain that the FULL template is showing with starter content. "
+                "List what you can change (colors, photos, every section). Wait for تایید, then "
+                "call record_preview_confirmation with confirmed=true."
+            ),
+        }
+    )
     return result
 
 
@@ -215,6 +230,7 @@ def save_section(
     if not _is_active(website) and merged is not None and (
         section in HANDWERK_ONLY and is_handwerk_business(kind, "" if kind else website.get("business_name"))
     ):
+        site_data = seed_full_template(site_data, str(website.get("business_name") or ""))
         extra = _activation_update(website, site_data)
         activated = True
     _ensure_hero(site_data, website)
@@ -231,6 +247,10 @@ def save_section(
         "ask_customer": ask,
         "agent_should_write": suggestions(section, final_entry),
         "sections": _state(site_data),
+        "ask_user": (
+            "Send the preview URL. Do not treat this save as approved. Wait for explicit "
+            "تایید / YES, then call record_preview_confirmation with confirmed=true."
+        ),
     }
     if activated:
         result["activated_template"] = True
@@ -322,9 +342,9 @@ _IDENTITY = {
 OVERVIEW_SCHEMA = {
     "name": "handwerk_template_overview",
     "description": (
-        "Renovation / Sanierung template: list every section (hero, services, guarantees, projects, reviews, "
-        "quality, team, before_after, financing, process, faq, contact, footer) with a pitch and whether it is "
-        "active. Use it to introduce optional sections to a crafts / renovation customer."
+        "Renovation / plumber template: list every section and every thing you can change "
+        "(colors, photos, hours, map, reviews, each block). Use it after activating so you can "
+        "pitch the full page and offer edits."
     ),
     "parameters": {"type": "object", "properties": dict(_IDENTITY), "required": ["identifier", "platform"]},
 }
@@ -332,8 +352,10 @@ OVERVIEW_SCHEMA = {
 ACTIVATE_SCHEMA = {
     "name": "activate_handwerk_template",
     "description": (
-        "Switch the active website to the premium renovation template (theme handwerk-premium). Use it when the "
-        "customer is a renovation, Sanierung, Umbau or Handwerk company. Existing hero, services, hours and FAQ stay."
+        "Switch the site to the premium renovation template and show EVERY section with default "
+        "starter content. Use it as soon as the customer is renovation, Sanierung, plumber / Klempner, "
+        "or even if they only gave a company name for that trade. Incomplete descriptions still get "
+        "the full template. Then send the preview and list what you can change."
     ),
     "parameters": {"type": "object", "properties": dict(_IDENTITY), "required": ["identifier", "platform"]},
 }
@@ -357,7 +379,9 @@ SAVE_SCHEMA = {
         "- process: {items:[{title, description}]}\n"
         "- faq: {items:[{question, answer}]}\n"
         "- contact: {coverage, hqAddress, items:[{name, address, phone}]}\n"
-        "- footer: {about}"
+        "- footer: {about}\n"
+        "- materials: {title, items:[{title, spec}]}\n"
+        "- working_hours: {text} or {items:[{days, hours}]}"
     ),
     "parameters": {
         "type": "object",

@@ -21,6 +21,7 @@ def _handle_update_website_content(args: dict, **kwargs) -> str:
             business_name=str(args.get("business_name") or ""),
             business_type=str(args.get("business_type") or ""),
             theme=str(args.get("theme") or ""),
+            primary_color=str(args.get("primary_color") or ""),
         )
     except Exception as exc:
         logger.warning("update_website_content failed: %s", exc, exc_info=True)
@@ -60,7 +61,11 @@ UPDATE_WEBSITE_CONTENT_SCHEMA = {
             },
             "theme": {
                 "type": "string",
-                "description": "Visual theme: clinic-premium (doctors), handwerk-premium (renovation / Sanierung), luxury, zen, corporate, or default. Medical sites get clinic-premium automatically. Handwerk sites get handwerk-premium automatically.",
+                "description": "Visual theme: clinic-premium (doctors), handwerk-premium (renovation / plumber), luxury, zen, corporate, or default. Medical sites get clinic-premium automatically. Handwerk sites get handwerk-premium automatically.",
+            },
+            "primary_color": {
+                "type": "string",
+                "description": "Brand color as hex, e.g. #c45c26. Use when the customer wants the template colors changed.",
             },
             "content": {
                 "type": "object",

@@ -12,10 +12,16 @@ import logging
 import random
 import re
 import unicodedata
+from datetime import datetime, timezone
 from typing import Any, Optional
 
 from tools.clinic_content import CLINIC_THEME, is_medical_business, should_upgrade_theme
-from tools.handwerk_content import HANDWERK_THEME, is_handwerk_business, should_upgrade_handwerk_theme
+from tools.handwerk_content import (
+    HANDWERK_THEME,
+    is_handwerk_business,
+    seed_full_template,
+    should_upgrade_handwerk_theme,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -262,7 +268,7 @@ def _insert_website(user_id: str, slug: str, business_name: str = "", business_t
     elif is_handwerk_business(business_type, business_name):
         theme_config["theme"] = HANDWERK_THEME
         theme_config["template"] = HANDWERK_THEME
-        site_data["theme"] = HANDWERK_THEME
+        site_data = seed_full_template(site_data, business_name)
     payload = {
         "user_id": user_id,
         "slug": slug,
@@ -627,6 +633,7 @@ def update_website_content(
     business_name: str = "",
     business_type: str = "",
     theme: str = "",
+    primary_color: str = "",
 ) -> dict:
     account = ensure_account(sender_id, platform)
     if account.get("error"):
@@ -650,7 +657,8 @@ def update_website_content(
         hero_title = str((patch.get("hero") or {}).get("title") or "").strip()
         if hero_title and not str(website.get("business_name") or "").strip():
             business_name = hero_title
-    if not patch and not business_name and not business_type and not theme:
+    color = str(primary_color or "").strip()
+    if not patch and not business_name and not business_type and not theme and not color:
         return {"error": "content is empty"}
 
     # Doctors and clinics get the clinic template unless the customer picked another look.
@@ -688,11 +696,22 @@ def update_website_content(
             update["subdomain"] = slug
     if business_type:
         update["business_type"] = business_type
+    previous_theme = str(_theme_config(website).get("theme") or "").strip().lower()
     if theme:
         config = _theme_config(website)
         config["theme"] = theme
         update["theme_config"] = config
         update["site_data"]["theme"] = theme
+        if theme == HANDWERK_THEME and previous_theme != HANDWERK_THEME:
+            update["site_data"] = seed_full_template(
+                update["site_data"],
+                business_name or str(website.get("business_name") or ""),
+            )
+    if color:
+        config = update.get("theme_config") or _theme_config(website)
+        config["primaryColor"] = color
+        update["theme_config"] = config
+        update["site_data"]["primaryColor"] = color
 
     _client().table("websites").update(update).eq("id", website["id"]).execute()
     return {
@@ -701,6 +720,10 @@ def update_website_content(
         "preview_url": preview_url(slug) if slug else "",
         "business_name": business_name or website.get("business_name") or "",
         "content_json": updated,
+        "ask_user": (
+            "Send the preview URL. Wait for explicit تایید / YES, then call "
+            "record_preview_confirmation with confirmed=true. Do not treat this save as approval."
+        ),
     }
 
 
@@ -750,6 +773,110 @@ def update_legal_impressum(
     }
 
 
+def record_preview_confirmation(
+    sender_id: str,
+    platform: str,
+    confirmed: bool = False,
+    summary: str = "",
+) -> dict:
+    """Store that the user explicitly approved the current preview. Call only after they say YES / تایید."""
+    if not confirmed:
+        return {
+            "error": "needs_confirmation",
+            "message": (
+                "Do not record approval yet. Send the preview URL, wait for explicit "
+                "تایید / بله / YES / ok, then call again with confirmed=true."
+            ),
+        }
+    account = ensure_account(sender_id, platform)
+    if account.get("error"):
+        return account
+    if account.get("needs_choice") or not account.get("website"):
+        return {
+            "error": "needs_website_choice",
+            "websites": account.get("websites") or [],
+            "message": "Ask which website they are confirming before recording approval.",
+        }
+    website = account["website"]
+    site_data = _load_json_object(website.get("site_data"))
+    slug = str(website.get("slug") or "")
+    entry = {
+        "at": datetime.now(timezone.utc).isoformat(),
+        "kind": "preview_publish",
+        "confirmed": True,
+        "preview_url": preview_url(slug) if slug else "",
+        "summary": str(summary or "").strip(),
+        "sender_id": sender_id,
+        "platform": platform,
+    }
+    history = site_data.get("confirmations")
+    if not isinstance(history, list):
+        history = []
+    history.append(entry)
+    site_data["confirmations"] = history[-50:]
+    site_data["last_confirmed_at"] = entry["at"]
+    _client().table("websites").update({"site_data": site_data}).eq("id", website["id"]).execute()
+    return {
+        "status": "recorded",
+        "confirmed": True,
+        "confirmation": entry,
+        "preview_url": entry["preview_url"],
+        "message": "User approval is stored. You may tell them the preview is confirmed.",
+    }
+
+
+def wipe_user_account(sender_id: str, platform: str, confirmed: bool = False) -> dict:
+    """Delete the user, every website, and free the subdomain. Hermes will not know them afterwards."""
+    platform = normalize_platform(platform)
+    sender_id = normalize_identifier(sender_id, platform)
+    if not confirmed:
+        return {
+            "error": "needs_confirmation",
+            "message": (
+                "This permanently deletes the account, every website, and the subdomain. "
+                "Warn the user. If they say yes, call again with confirmed=true."
+            ),
+        }
+    user = lookup_user_row(sender_id, platform)
+    if not user:
+        return {
+            "status": "already_gone",
+            "message": "No account for this sender. Treat them as a new customer. Do not mention old sites.",
+        }
+    user_id = user["id"]
+    websites = _websites_for_user(user_id)
+    slugs = [str(site.get("slug") or site.get("subdomain") or "") for site in websites]
+    if active_column_available():
+        try:
+            _client().table("users").update({"active_website_id": None}).eq("id", user_id).execute()
+        except Exception as exc:
+            logger.warning("could not clear active_website_id: %s", exc)
+    for site in websites:
+        site_id = site.get("id")
+        if not site_id:
+            continue
+        try:
+            _client().table("legal_impressum").delete().eq("website_id", site_id).execute()
+        except Exception as exc:
+            logger.info("legal_impressum delete skipped: %s", exc)
+        _client().table("websites").delete().eq("id", site_id).execute()
+    _client().table("users").delete().eq("id", user_id).execute()
+    leftover = lookup_user_row(sender_id, platform)
+    if leftover:
+        return {
+            "error": "wipe_incomplete",
+            "message": "User row still exists. Do not claim the account is gone.",
+        }
+    return {
+        "status": "wiped",
+        "deleted_slugs": [slug for slug in slugs if slug],
+        "message": (
+            "Account, websites, and subdomains are gone. The next message creates a brand-new "
+            "user. Do not recall their old site. Greet them as unknown."
+        ),
+    }
+
+
 def build_lookup_prefix(account: dict) -> str:
     sender_id = account.get("sender_id") or ""
     platform = account.get("platform") or ""
@@ -762,7 +889,10 @@ def build_lookup_prefix(account: dict) -> str:
         parts.append(
             "NEW ACCOUNT. A website was just created. Welcome the user in their language. "
             f"Include this preview link: {url}. "
-            "Ask for the business name, services, or any changes. Do not create the account again."
+            "Ask for the business name or what they do. If they renovate homes, are a plumber / "
+            "Klempner, or only give a company name for that trade, call activate_handwerk_template "
+            "immediately so the FULL template shows with default values — do not wait for a complete "
+            "brief. Then list what you can change. Do not create the account again."
         )
     else:
         parts.append("FOUND. Do not create another account.")
@@ -793,20 +923,24 @@ def build_lookup_prefix(account: dict) -> str:
         website.get("business_type"), "" if website.get("business_type") else website.get("business_name")
     ):
         parts.append(
-            "This looks like a renovation / Sanierung / Handwerk company. It uses the premium renovation template "
-            "(theme handwerk-premium). Follow the skill handwerk-template: introduce optional sections "
-            "(guarantees, projects, reviews, team, before/after, financing, process, FAQ, contact) and let them choose. "
-            "Use handwerk_template_overview, save_handwerk_section, remove_handwerk_section, and "
-            "activate_handwerk_template if needed. Write titles and descriptions yourself in German and English. "
-            "Ask only for facts (service names, project cities, team names, real reviews). Never invent facts. "
-            "Customers change any picture by sending a photo; use set_site_image."
+            "This looks like a renovation / Sanierung / plumber / Handwerk company. It uses the premium "
+            "renovation template (theme handwerk-premium). Follow the skill handwerk-template: show the "
+            "COMPLETE template with default values first (activate_handwerk_template), even if they only "
+            "gave a company name. Then proactively list what you can change: colors, photos, every section, "
+            "hours, map, reviews. They can ask to remove or add parts. Use handwerk_template_overview, "
+            "save_handwerk_section, remove_handwerk_section. Write titles yourself in German and English. "
+            "When personalizing, ask only for real facts. Customers change pictures with set_site_image. "
+            "Colors: update_website_content primary_color."
         )
     parts.append(
-        "Use update_website_content for hero, services, prices, hours, contact, and FAQ. "
+        "Use update_website_content for hero, services, prices, hours, contact, FAQ, and primary_color. "
         "Use update_legal_impressum for owner name, address, tax ID / USt-IdNr, and legal form. "
         "Use list_user_websites, switch_active_website, and create_website to manage several sites. "
+        "If they ask to delete all their data, warn them, then call wipe_user_account with confirmed=true "
+        "only after they say yes. That removes the user, every website, and the subdomain. "
         "Pass this sender_id and platform. Never invent them. "
-        "After every create or edit, send the https://[slug].easywebbuilder.de link and ask the user to confirm. "
+        "After every create or edit, send the https://[slug].easywebbuilder.de link and wait for explicit "
+        "تایید. Then call record_preview_confirmation with confirmed=true to store that they approved. "
         "Reply in the user's language. Never use another domain."
     )
     return " ".join(parts)

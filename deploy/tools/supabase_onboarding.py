@@ -11,16 +11,20 @@ import logging
 from typing import Any
 
 from tools.registry import registry
+from tools.clinic_content import CLINIC_THEME, is_medical_business
 from tools.website_store import (
+    _theme_config,
     build_lookup_prefix,
     create_website,
     ensure_account,
     list_websites,
     normalize_identifier,
     normalize_platform,
+    record_preview_confirmation,
     supabase,
     switch_website,
     update_legal_impressum,
+    wipe_user_account,
 )
 
 logger = logging.getLogger(__name__)
@@ -110,6 +114,13 @@ def attach_inbound_sender_context(event: Any, source: Any = None) -> dict:
 
         _bind_skill(event, "supabase-onboarding")
         _bind_skill(event, "update-website")
+        _bind_skill(event, "handwerk-template")
+        website = account.get("website") or {}
+        current_theme = str(_theme_config(website).get("theme") or "").strip().lower()
+        if current_theme == CLINIC_THEME or is_medical_business(
+            website.get("business_type"), website.get("business_name")
+        ):
+            _bind_skill(event, "clinic-template")
         logger.info(
             "Supabase sender context attached: %s/%s created=%s",
             platform,
@@ -190,6 +201,29 @@ def _handle_update_legal(args: dict, **kwargs) -> str:
             address=str(args.get("address") or ""),
             tax_number=str(args.get("tax_number") or ""),
             legal_form=str(args.get("legal_form") or ""),
+        )
+    )
+
+
+def _handle_record_confirmation(args: dict, **kwargs) -> str:
+    del kwargs
+    return _dump(
+        record_preview_confirmation(
+            sender_id=str(args.get("sender_id") or args.get("identifier") or ""),
+            platform=str(args.get("platform") or ""),
+            confirmed=bool(args.get("confirmed")),
+            summary=str(args.get("summary") or ""),
+        )
+    )
+
+
+def _handle_wipe_account(args: dict, **kwargs) -> str:
+    del kwargs
+    return _dump(
+        wipe_user_account(
+            sender_id=str(args.get("sender_id") or args.get("identifier") or ""),
+            platform=str(args.get("platform") or ""),
+            confirmed=bool(args.get("confirmed")),
         )
     )
 
@@ -321,6 +355,49 @@ registry.register(
     check_fn=_supabase_available,
     emoji="🔀",
 )
+CONFIRM_SCHEMA = {
+    "name": "record_preview_confirmation",
+    "description": (
+        "Store that the user explicitly approved the current preview. Call ONLY after they said "
+        "تایید / بله / YES / ok. Pass confirmed=true. Never call this in the same turn as the edit."
+    ),
+    "parameters": {
+        "type": "object",
+        "properties": {
+            **_SENDER_PROPS,
+            "confirmed": {
+                "type": "boolean",
+                "description": "Must be true. Set only after the user explicitly confirmed the preview.",
+            },
+            "summary": {
+                "type": "string",
+                "description": "Short note of what they approved, in their words.",
+            },
+        },
+        "required": ["sender_id", "platform", "confirmed"],
+    },
+}
+
+WIPE_SCHEMA = {
+    "name": "wipe_user_account",
+    "description": (
+        "Permanently delete this sender's account, every website, and the subdomain so Hermes no "
+        "longer knows them. The next message creates a new empty account. First warn the user. "
+        "Call with confirmed=true only after they clearly say yes. Irreversible."
+    ),
+    "parameters": {
+        "type": "object",
+        "properties": {
+            **_SENDER_PROPS,
+            "confirmed": {
+                "type": "boolean",
+                "description": "Must be true. Set only after the user confirmed they want everything deleted.",
+            },
+        },
+        "required": ["sender_id", "platform", "confirmed"],
+    },
+}
+
 registry.register(
     name="update_legal_impressum",
     toolset="web",
@@ -328,4 +405,20 @@ registry.register(
     handler=_handle_update_legal,
     check_fn=_supabase_available,
     emoji="⚖️",
+)
+registry.register(
+    name="record_preview_confirmation",
+    toolset="web",
+    schema=CONFIRM_SCHEMA,
+    handler=_handle_record_confirmation,
+    check_fn=_supabase_available,
+    emoji="✅",
+)
+registry.register(
+    name="wipe_user_account",
+    toolset="web",
+    schema=WIPE_SCHEMA,
+    handler=_handle_wipe_account,
+    check_fn=_supabase_available,
+    emoji="🗑️",
 )
