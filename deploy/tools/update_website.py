@@ -60,7 +60,7 @@ UPDATE_WEBSITE_CONTENT_SCHEMA = {
             },
             "theme": {
                 "type": "string",
-                "description": "Visual theme: clinic-premium (doctors, dentists, clinics), luxury, zen, corporate, or default. Medical sites get clinic-premium automatically.",
+                "description": "Visual theme: clinic-premium (doctors), handwerk-premium (renovation / Sanierung), luxury, zen, corporate, or default. Medical sites get clinic-premium automatically. Handwerk sites get handwerk-premium automatically.",
             },
             "content": {
                 "type": "object",

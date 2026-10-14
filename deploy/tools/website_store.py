@@ -15,6 +15,7 @@ import unicodedata
 from typing import Any, Optional
 
 from tools.clinic_content import CLINIC_THEME, is_medical_business, should_upgrade_theme
+from tools.handwerk_content import HANDWERK_THEME, is_handwerk_business, should_upgrade_handwerk_theme
 
 logger = logging.getLogger(__name__)
 
@@ -258,6 +259,10 @@ def _insert_website(user_id: str, slug: str, business_name: str = "", business_t
         # Doctors and clinics get the premium clinic template from the start.
         theme_config["theme"] = CLINIC_THEME
         site_data["theme"] = CLINIC_THEME
+    elif is_handwerk_business(business_type, business_name):
+        theme_config["theme"] = HANDWERK_THEME
+        theme_config["template"] = HANDWERK_THEME
+        site_data["theme"] = HANDWERK_THEME
     payload = {
         "user_id": user_id,
         "slug": slug,
@@ -654,6 +659,10 @@ def update_website_content(
         chosen = theme or str(_theme_config(website).get("theme") or "").strip().lower()
         if should_upgrade_theme(chosen):
             theme = CLINIC_THEME
+    elif is_handwerk_business(kind, "" if kind else (business_name or website.get("business_name"))):
+        chosen = theme or str(_theme_config(website).get("theme") or "").strip().lower()
+        if should_upgrade_handwerk_theme(chosen):
+            theme = HANDWERK_THEME
 
     current = _load_json_object(website.get("content_json"))
     if not any(_filled(current.get(key)) for key in ("hero", "services", "contact", "faq")):
@@ -779,6 +788,18 @@ def build_lookup_prefix(account: dict) -> str:
             "remove_clinic_section for ones they do not want, and activate_clinic_template if the site does not use "
             "the template yet. Write titles and descriptions yourself in German and English. Ask the customer only for "
             "facts (names, prices, addresses, phone, hours). Never invent facts."
+        )
+    elif current_theme == HANDWERK_THEME or is_handwerk_business(
+        website.get("business_type"), "" if website.get("business_type") else website.get("business_name")
+    ):
+        parts.append(
+            "This looks like a renovation / Sanierung / Handwerk company. It uses the premium renovation template "
+            "(theme handwerk-premium). Follow the skill handwerk-template: introduce optional sections "
+            "(guarantees, projects, reviews, team, before/after, financing, process, FAQ, contact) and let them choose. "
+            "Use handwerk_template_overview, save_handwerk_section, remove_handwerk_section, and "
+            "activate_handwerk_template if needed. Write titles and descriptions yourself in German and English. "
+            "Ask only for facts (service names, project cities, team names, real reviews). Never invent facts. "
+            "Customers change any picture by sending a photo; use set_site_image."
         )
     parts.append(
         "Use update_website_content for hero, services, prices, hours, contact, and FAQ. "

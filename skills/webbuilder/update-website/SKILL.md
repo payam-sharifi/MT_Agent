@@ -50,9 +50,12 @@ Pass only the fields they changed. The tool merges. Services merge by `name`. FA
 | FAQ | `content.faq` item `{question, answer}` |
 | A photo or image link, a logo | `set_site_image` (skill clinic-template, Pictures) |
 | Owner, address, tax ID, legal form | `update_legal_impressum` |
-| Look or color | `theme`: `luxury` (beauty, dark, gold), `zen` (spa, massage), `corporate` (formal), `default` (otherwise). Doctors, dentists and clinics use the premium clinic template: `clinic-premium` (see the clinic-template skill; it is set automatically for medical sites) |
+| Look or color | `theme`: `luxury` (beauty, dark, gold), `zen` (spa, massage), `corporate` (formal), `default` (otherwise). Doctors, dentists and clinics use the premium clinic template: `clinic-premium` (see the clinic-template skill; it is set automatically for medical sites). Renovation / Sanierung / Handwerk companies use `handwerk-premium` (see the handwerk-template skill; it is set automatically for those businesses) |
 | Doctors, check-up packages, about us, locations, extra FAQ on a clinic site | `save_clinic_section` (skill clinic-template) |
+| Services, projects, team, before/after, guarantees on a renovation site | `save_handwerk_section` (skill handwerk-template) |
 
 ## Clinic sites
 
 If the site is for a doctor, dentist or clinic, follow the `clinic-template` skill. Introduce the optional template sections to the customer, add only the ones they choose, fill them fully, and never invent facts.
+
+If the site is for renovation, Sanierung, Umbau or Handwerk, follow the `handwerk-template` skill the same way.

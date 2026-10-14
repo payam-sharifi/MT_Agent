@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>نقشه راه شروع کسب‌وکار وب و نرم‌افزار در هامبورگ</title>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#f7f8fa; --card:#fff; --ink:#1d2433; --muted:#5b6578; --brand:#2f5bea; --warn:#b42318; --warnbg:#fef3f2; --ok:#067647; --okbg:#ecfdf3; --line:#e4e7ec; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:"Vazirmatn", Tahoma, "Segoe UI", sans-serif; line-height:2; font-size:17px; direction:rtl; text-align:right; }
+  .wrap { max-width:900px; margin:0 auto; padding:32px 20px 80px; }
+  h1 { font-size:30px; margin:0 0 6px; font-weight:800; }
+  .sub { color:var(--muted); margin-bottom:28px; }
+  h2 { font-size:23px; margin:40px 0 14px; padding-right:14px; border-right:5px solid var(--brand); font-weight:800; }
+  h3 { font-size:19px; margin:24px 0 8px; font-weight:600; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px 22px; margin:14px 0; }
+  .warn { background:var(--warnbg); border-color:#fecdca; }
+  .warn h3 { color:var(--warn); margin-top:0; }
+  .ok { background:var(--okbg); border-color:#abefc6; }
+  ul, ol { padding-right:26px; padding-left:0; margin:8px 0; }
+  li { margin:4px 0; }
+  table { width:100%; border-collapse:collapse; margin:12px 0; direction:rtl; }
+  th, td { border:1px solid var(--line); padding:10px 12px; text-align:right; background:#fff; }
+  th { background:#eef2ff; }
+  .ltr { direction:ltr; unicode-bidi:embed; display:inline-block; }
+  code { direction:ltr; unicode-bidi:embed; background:#eef0f4; padding:1px 6px; border-radius:6px; font-size:.9em; }
+  label.chk { display:flex; gap:10px; align-items:flex-start; margin:6px 0; cursor:pointer; }
+  label.chk input { margin-top:10px; transform:scale(1.2); }
+  .tag { display:inline-block; font-size:13px; background:#eef2ff; color:var(--brand); border-radius:999px; padding:0 10px; margin-left:6px; }
+  .small { color:var(--muted); font-size:14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>نقشه راه شروع کسب‌وکار وب و نرم‌افزار</h1>
+<div class="sub">هامبورگ · Kleingewerbe · سایت + پشتیبانی با پیام تلگرام · نسخه اول (۸ اکتبر ۲۰۲۶)</div>
+
+<div class="card ok">
+  <strong>ایده اصلی:</strong> ساخت سایت برای شرکت‌ها (معرفی، فروشگاهی، رزرو) و سپردن پشتیبانی روزمره به AI Agent.
+  مشتری فقط یک پیام در تلگرام می‌فرستد (مثلاً «قیمت X شد ۱۲ یورو») و تغییر روی سایت اعمال می‌شود.
+  درآمد اصلی باید از <strong>نگه‌داری ماهانه</strong> باشد، نه فقط ساخت سایت.
+</div>
+
+<h2>۱. چهار خطری که قبل از هر کاری باید روشن شوند</h2>
+
+<div class="card warn">
+  <h3>الف) مجوز کار مستقل</h3>
+  <ul>
+    <li>اگر شهروند آلمان یا EU نیستی، در کارت اقامتت باید «<span class="ltr">Selbständige Erwerbstätigkeit</span>» مجاز باشد. اگر نیست، باید از <span class="ltr">Ausländerbehörde</span> اجازه بگیری.</li>
+    <li>اگر کارمند هستی، قراردادت را برای <span class="ltr">Nebentätigkeit</span> چک کن و در صورت نیاز با کارفرما هماهنگ کن.</li>
+  </ul>
+</div>
+
+<div class="card warn">
+  <h3>ب) پرداخت به تیم ایران</h3>
+  <ul>
+    <li>بانک‌های آلمان معمولاً انتقال به ایران را رد می‌کنند (تحریم و Compliance). بدون راه پرداخت قانونی و مستند، ریسک بسته شدن حساب بانکی وجود دارد.</li>
+    <li>سرویس‌هایی مثل GitHub، AWS و Stripe ممکن است دسترسی از ایران را مسدود کنند.</li>
+    <li>هزینه پرداختی به تیم خارجی باید فاکتور و مدرک داشته باشد. برای خدمات دریافتی از خارج، قانون <span class="ltr">§13b UStG</span> ممکن است مطرح شود. این را با <span class="ltr">Steuerberater</span> چک کن.</li>
+  </ul>
+</div>
+
+<div class="card warn">
+  <h3>ج) پنهان کردن تیم ایران از مشتری</h3>
+  <ul>
+    <li>برای سایت معرفی ساده‌ای که خودت می‌سازی و داده شخصی ندارد، مشکلی نیست.</li>
+    <li>اگر سایت داده شخصی دارد (فروشگاه، رزرو، فرم مشتری، CRM)، طبق <span class="ltr">DSGVO</span> دسترسی تیم در کشور سوم باید در قرارداد <span class="ltr">AVV</span> بیاید. ایران <span class="ltr">Angemessenheitsbeschluss</span> ندارد. پنهان کردنش ریسک حقوقی واقعی است.</li>
+    <li><strong>راه امن:</strong> تیم ایران با داده نمونه کد بزند و دسترسی به سرور و دیتابیس مشتری فقط دست خودت باشد.</li>
+  </ul>
+</div>
+
+<div class="card warn">
+  <h3>د) AI Agent و تغییر مستقیم سایت</h3>
+  <ul>
+    <li>فقط شماره یا آیدی تلگرام ثبت‌شده مشتری مجاز باشد.</li>
+    <li>قبل از اعمال هر تغییر، تأیید بگیر («قیمت X از ۱۰ به ۱۲ یورو تغییر کند؟ بله/خیر»). اشتباه در قیمت می‌تواند ضرر یا <span class="ltr">Abmahnung</span> بیاورد.</li>
+    <li>لاگ تغییرات و امکان برگشت (Rollback).</li>
+    <li>با تلگرام شروع کن. واتساپ رسمی نیاز به <span class="ltr">WhatsApp Business API</span> و هزینه دارد.</li>
+    <li>اگر داده مشتری به سرویس AI می‌رود، باید در حریم خصوصی و <span class="ltr">AVV</span> بیاید.</li>
+  </ul>
+</div>
+
+<h2>۲. چک‌لیست قانونی (Kleingewerbe در هامبورگ)</h2>
+<p class="small">تیک‌ها فقط روی همین صفحه نمایش داده می‌شوند و ذخیره نمی‌شوند. عدد و قوانین را با Finanzamt یا Steuerberater تأیید کن.</p>
+<div class="card">
+  <label class="chk"><input type="checkbox"> <span>متن فعالیت در <span class="ltr">Gewerbeanmeldung</span> همه چیز را پوشش می‌دهد: وب‌دیزاین، توسعه نرم‌افزار، هاستینگ و نگه‌داری، اتوماسیون، مشاوره IT.</span></label>
+  <label class="chk"><input type="checkbox"> <span>پرسشنامه مالیاتی (<span class="ltr">Fragebogen zur steuerlichen Erfassung</span>) در ELSTER پر شده و شماره مالیاتی را داری.</span></label>
+  <label class="chk"><input type="checkbox"> <span>وضعیت عضویت <span class="ltr">Handelskammer Hamburg</span> و هزینه آن روشن است.</span></label>
+  <label class="chk"><input type="checkbox"> <span>سقف <span class="ltr">Kleinunternehmerregelung</span> را چک کردی (از ۲۰۲۵: حدود ۲۵٬۰۰۰ یورو سال قبل و ۱۰۰٬۰۰۰ یورو سال جاری، تأیید کن).</span></label>
+  <label class="chk"><input type="checkbox"> <span>بیمه درمان و وضعیت <span class="ltr">Rentenversicherung</span> روشن است.</span></label>
+  <label class="chk"><input type="checkbox"> <span>بیمه مسئولیت حرفه‌ای (<span class="ltr">IT-Haftpflicht</span>) گرفته شده.</span></label>
+  <label class="chk"><input type="checkbox"> <span>حساب بانکی جدا برای کسب‌وکار.</span></label>
+  <label class="chk"><input type="checkbox"> <span>حسابداری ساده از روز اول (فاکتور، هزینه‌ها). سالانه <span class="ltr">EÜR</span>.</span></label>
+  <label class="chk"><input type="checkbox"> <span>سایت خودت: <span class="ltr">Impressum</span>، <span class="ltr">Datenschutzerklärung</span> و <span class="ltr">AGB</span>.</span></label>
+  <label class="chk"><input type="checkbox"> <span>قرارداد پروژه (ساخت سایت) و قرارداد نگه‌داری ماهانه.</span></label>
+  <label class="chk"><input type="checkbox"> <span>قالب <span class="ltr">AVV</span> برای داده مشتری.</span></label>
+  <label class="chk"><input type="checkbox"> <span>قرارداد با بازاریاب‌ها (<span class="ltr">Vermittler / Handelsvertreter</span>) با درصد کمیسیون.</span></label>
+  <label class="chk"><input type="checkbox"> <span>به بازاریاب‌ها گفته‌ای که تماس تلفنی یا ایمیل سرد به شرکت‌ها طبق <span class="ltr">UWG</span> محدودیت دارد.</span></label>
+  <label class="chk"><input type="checkbox"> <span>متن‌های حقوقی آلمانی را یک بار با وکیل یا سرویسی مثل <span class="ltr">IT-Recht Kanzlei</span> یا <span class="ltr">eRecht24</span> چک کردی.</span></label>
+</div>
+
+<h2>۳. مدل کسب‌وکار و پکیج‌ها</h2>
+<table>
+  <tr><th>پکیج</th><th>چه می‌دهد</th><th>نوع درآمد</th></tr>
+  <tr><td>شروع</td><td>سایت معرفی ۳ تا ۵ صفحه‌ای + دامنه و هاست</td><td>یک‌بار</td></tr>
+  <tr><td>نگه‌داری</td><td>تغییرات از تلگرام (قیمت، ساعت کاری، متن)، بکاپ، به‌روزرسانی</td><td>ماهانه</td></tr>
+  <tr><td>رشد</td><td>فروشگاه یا رزرو + اتوماسیون</td><td>پروژه‌ای + ماهانه</td></tr>
+</table>
+<ul>
+  <li>نگه‌داری ماهانه مثلاً ۲۹ تا ۷۹ یورو. ۲۰ مشتری یعنی درآمد پایدار.</li>
+  <li>اولین ۳ مشتری را (حتی با تخفیف) برای نمونه‌کار و نظر مشتری بگیر.</li>
+  <li>مشتری فارسی‌زبان هدف اول است. بازاریاب‌ها مشتری آلمانی می‌آورند و درصد می‌گیرند.</li>
+</ul>
+
+<h2>۴. ارزیابی مزیت‌های رقابتی</h2>
+<table>
+  <tr><th>مزیت</th><th>ارزیابی</th><th>توضیح</th></tr>
+  <tr>
+    <td>پشتیبانی با پیام تلگرام</td>
+    <td><strong>قوی. مزیت اصلی تو</strong></td>
+    <td>مشخص و قابل‌فهم است و رقبای کوچک (Wix، Jimdo، فریلنسرها) این را ندارند. مشتری فقط یک پیام می‌فرستد. زیرساختش را هم داری: Hermes، Supabase، ابزارهای <span class="ltr">update_website_content</span> و <span class="ltr">set_site_image</span> (مشتری عکس را در چت می‌فرستد). باید دقیقاً تعریف کنی چه چیزهایی را می‌شود با پیام عوض کرد و چه چیزهایی را نه.</td>
+  </tr>
+  <tr>
+    <td>پکیج سایت معرفی + نوبت‌دهی برای اصناف</td>
+    <td><strong>قوی. به‌شرط تمرکز روی یک صنف</strong></td>
+    <td>فروش یک محصول مشخص با قیمت مشخص خیلی راحت‌تر از «هر سایتی که بخواهید» است. نمونه‌کار نوبت‌دهی‌ات این را ثابت می‌کند. ریسک: رقبای جدی (Treatwell، Booksy، Fresha، Doctolib، Calendly) وجود دارند. پس تمایزت باید «سایت خودت + بدون کمیسیون + تغییر با تلگرام» باشد.</td>
+  </tr>
+  <tr>
+    <td>هزینه کمتر</td>
+    <td><strong>ضعیف تا متوسط</strong></td>
+    <td>«ارزان‌تر» مزیت پایدار نیست. همیشه کسی ارزان‌تر است (Wix، فریلنسر، ابزارهای AI) و مشتری فکر می‌کند کیفیت پایین است. بهتر است بگویی «قیمت ثابت و شفاف + همه‌چیز در یک مبلغ ماهانه». ارزان بودنت را از ساختار هزینه‌ات بگیر، نه از شعار.</td>
+  </tr>
+  <tr>
+    <td>اتوماسیون کارها</td>
+    <td><strong>متوسط. به‌عنوان افزونه</strong></td>
+    <td>برای اول کار خیلی کلی است. اتوماسیون را با مثال‌های مشخص بفروش: یادآوری نوبت، پاسخ خودکار به درخواست‌ها، ارسال فاکتور.</td>
+  </tr>
+</table>
+
+<div class="card warn">
+  <h3>نکته مهم درباره زبان و پیام‌رسان</h3>
+  <ul>
+    <li>مشتریان فارسی‌زبان معمولاً با تلگرام راحت‌اند. اما کسب‌وکارهای <strong>آلمانی</strong> (مثلاً لوله‌کش و آرایشگر) بیشتر از <strong>واتساپ</strong> استفاده می‌کنند. اگر فقط تلگرام داشته باشی، بخش بزرگی از بازار آلمان را از دست می‌دهی.</li>
+    <li>کد gateway تو از واتساپ هم پشتیبانی می‌کند (<span class="ltr">whatsapp_cloud</span>). مطمئن شو از <strong>WhatsApp Cloud API رسمی</strong> استفاده می‌کنی. اتصال‌های غیررسمی (مثلاً کتابخانه‌هایی که با WhatsApp Web کار می‌کنند) خلاف شرایط واتساپ‌اند و ریسک مسدود شدن دارند.</li>
+    <li>برای مشتری آلمانی، پیام‌ها و پاسخ‌های Agent باید به آلمانی باشد. اگر آلمانی‌ات ضعیف است، متن‌های ثابت را یک بار با یک آلمانی‌زبان چک کن.</li>
+  </ul>
+</div>
+
+<h2>۵. ارزیابی سایت‌هایی که ساخته‌ای</h2>
+
+<h3>الف) لندینگ فارسی (<span class="ltr">easywebbuilder-landing</span>)</h3>
+<div class="card ok">
+  <strong>نقاط قوت:</strong>
+  <ul>
+    <li>طراحی حرفه‌ای و مدرن، پوسته روشن و تیره، دوزبانه با RTL واقعی.</li>
+    <li>ساختار کامل: Hero، نمونه‌کار، قیمت، روند کار، سوالات متداول، فرم تماس.</li>
+    <li>متن‌ها در یک فایل (<span class="ltr">lib/content.ts</span>) هستند و تغییرشان راحت است.</li>
+  </ul>
+</div>
+<div class="card warn">
+  <h3>مشکلات جدی (به ترتیب اولویت)</h3>
+  <ol>
+    <li><strong>فرم تماس لید را ذخیره نمی‌کند.</strong> <span class="ltr">app/api/lead/route.ts</span> فقط <span class="ltr">console.info</span> می‌کند. هر کسی فرم را پر کند، سرنخ گم می‌شود. این باید اولین کار باشد (ارسال به تلگرام خودت + ذخیره در Supabase).</li>
+    <li><strong>مزیت اصلی‌ات (پشتیبانی تلگرامی) در صفحه نیست.</strong> سایت می‌گوید «وب‌سایت‌ساز هوشمند، ۴۰+ قالب، ویرایشگر کشیدن و رها کردن». این با کار واقعی تو نمی‌خواند. تو سایت می‌سازی و مشتری با پیام تغییر می‌دهد.</li>
+    <li><strong>ادعاهای بدون پشتوانه.</strong> «۴۰+ قالب»، «امتیاز PageSpeed ۹۹+»، «ترجمه یک‌کلیکی»، «ویرایشگر کشیدن و رها کردن»، «وب‌سایت‌های واقعی». اگر واقعی نیستند، طبق قانون رقابت آلمان (UWG) تبلیغ گمراه‌کننده حساب می‌شوند. یا درستشان کن یا حذف کن.</li>
+    <li><strong>نمونه‌کارها ساختگی‌اند ولی «واقعی» نامیده شده‌اند.</strong> «بوتیک نیلو» با «۱۲ هزار فروش و ۴.۹ ستاره»، «گروه آرمان» با «۱.۲ میلیون محموله و ۹۹.۲٪»، «کلینیک زیست». این‌ها دمو هستند. باید بنویسی «نمونه دمو»، آمار ساختگی را بردار، و به‌جایش کار واقعی بگذار.</li>
+    <li><strong>قیمت به تومان و دلار.</strong> مشتری هدفت در آلمان است. قیمت‌ها باید یورو باشند و با سایت آلمانی هم‌خوانی داشته باشند.</li>
+    <li><strong>مسائل قانونی:</strong> لینک‌های «حریم خصوصی» و «شرایط استفاده» خالی‌اند (<span class="ltr">href="#"</span>)، Impressum نیست، تیک رضایت حریم خصوصی فقط یک متن است، و شبکه‌های اجتماعی به صفحه اصلی instagram.com و غیره می‌روند. ایمیل <span class="ltr">hello@easywebbuilder.com</span> با دامنه <span class="ltr">.de</span> یکی نیست. تاریخ پایین صفحه هم شمسی (۱۴۰۵) است.</li>
+    <li>دکمه مستقیم «گفتگو در تلگرام» یا واتساپ وجود ندارد، در حالی که کسب‌وکارت تلگرام‌محور است.</li>
+  </ol>
+</div>
+
+<h3>ب) نسخه آلمانی (<span class="ltr">easy-web-builder</span>)</h3>
+<div class="card">
+  <ul>
+    <li><strong>خوب است که</strong> صفحه‌های <span class="ltr">Impressum</span>، <span class="ltr">Datenschutz</span> و <span class="ltr">AGB</span> دارد، قیمت‌ها به یورو است و ارجاع قانونی <span class="ltr">§ 5 DDG</span> درست و به‌روز است.</li>
+    <li><strong>هنوز آماده انتشار نیست.</strong> در Impressum جاهای خالی هست (<span class="ltr">[Straße und Hausnummer]</span> و غیره). شماره تلفن و واتساپ هنوز نمونه‌ای است (<span class="ltr">+49 40 0000 0000</span>). Impressum باید آدرس واقعی (قابل ابلاغ) داشته باشد و صندوق پستی کافی نیست.</li>
+    <li>قیمت‌ها «<span class="ltr">netto</span>» نوشته شده‌اند. اگر Kleinunternehmer هستی، USt نمی‌گیری و باید روی فاکتور و سایت به <span class="ltr">§ 19 UStG</span> اشاره کنی. با Steuerberater هماهنگ کن.</li>
+    <li>مقایسه «نصف قیمت یک آژانس معمولی» (۱٬۴۹۰ در برابر ۲٬۹۸۰ یورو) بدون منبع است. مقایسه قیمت در تبلیغات باید قابل اثبات باشد. بهتر است حذفش کنی یا منبع بدهی.</li>
+    <li>این نسخه باید سایت اصلی برای آلمان باشد. نسخه فارسی هم می‌تواند همین پروژه با زبان فارسی باشد تا دو سایت جدا نداشته باشی. یک پایگاه کد، دو زبان.</li>
+  </ul>
+</div>
+
+<h3>ج) سایت نوبت‌دهی مشتری آلمانی</h3>
+<div class="card">
+  <p>این سایت را در پوشه‌های پروژه پیدا نکردم. <span class="ltr">vivara-clinic</span> یک قالب کلینیک است و ماژول رزرو آن (<span class="ltr">BookingModal</span>) در کد درخواستی به سرور نمی‌فرستد. دو پروژه <span class="ltr">termin_*</span> هم تقریباً خالی‌اند. برای افزودن به نمونه‌کار لازم است:</p>
+  <ul>
+    <li>آدرس سایت زنده یا مسیر پروژه.</li>
+    <li><strong>اجازه کتبی مشتری</strong> برای نمایش اسم و عکس سایت (یک ایمیل کافی است).</li>
+    <li>عددهای واقعی: چند نوبت در ماه ثبت می‌شود؟ چقدر زمان تلفنی صرفه‌جویی شد؟ یک جمله نظر مشتری.</li>
+  </ul>
+  <p>یک Case Study واقعی با عدد، از ده‌ها دمو ارزشمندتر است.</p>
+</div>
+
+<h2>۶. پکیج «سایت معرفی + نوبت‌دهی + تلگرام»</h2>
+<p>ایده خوبی است. این‌طور سفتش کن:</p>
+
+<div class="card">
+  <h3>۱) اول یک صنف، نه همه</h3>
+  <ul>
+    <li><strong>اولویت اول: آرایشگاه و باربرشاپ.</strong> نوبت‌دهی نیاز اصلی‌شان است، سایت ساده می‌خواهند و فارسی‌زبان‌ها بین‌شان زیادند.</li>
+    <li><strong>اولویت دوم: صنف‌های خدماتی و لوله‌کشی.</strong> ولی آن‌ها بیشتر «درخواست وقت» و «لیست قیمت و خدمات» می‌خواهند تا نوبت دقیق. برایشان پکیج جدا لازم است: دکمه تماس، واتساپ، فرم درخواست، منطقه خدمات.</li>
+    <li><strong>پزشک و دندان‌پزشک را فعلاً کنار بگذار.</strong> داده سلامت طبق DSGVO (ماده ۹) حساس‌ترین دسته است. قانون تبلیغات پزشکی (<span class="ltr">Heilmittelwerbegesetz</span>) هم محدودیت دارد. و رقبای بزرگی مثل Doctolib هستند. بعد از چند مشتری و مشاوره حقوقی سراغش برو.</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h3>۲) پیشنهاد ساختار قیمت (فقط پیشنهاد؛ با بازار تست کن)</h3>
+  <table>
+    <tr><th>مورد</th><th>مبلغ پیشنهادی</th></tr>
+    <tr><td>راه‌اندازی (سایت معرفی + سیستم نوبت)</td><td>حدود ۴۹۰ تا ۹۹۰ یورو یک‌بار</td></tr>
+    <tr><td>اشتراک ماهانه (هاست، SSL، بکاپ، تغییرات با تلگرام یا واتساپ)</td><td>حدود ۳۹ تا ۶۹ یورو در ماه</td></tr>
+    <tr><td>افزونه‌ها (یادآوری پیامکی نوبت، تنظیم Google Business، چند زبانه)</td><td>جداگانه</td></tr>
+  </table>
+  <p class="small">بخش اصلی درآمدت باید از اشتراک ماهانه باشد. قراردادش را حداقل ۱۲ ماهه با ماه آخر لغو بنویس، و در قرارداد دقیق بنویس «چند تغییر در ماه» و «چه نوع تغییری» شامل است.</p>
+</div>
+
+<div class="card">
+  <h3>۳) تمایز واقعی نسبت به Treatwell و Booksy</h3>
+  <ul>
+    <li>بدون کمیسیون از هر نوبت.</li>
+    <li>سایت و نوبت‌دهی مال خودشان است، روی دامنه خودشان.</li>
+    <li>تغییرات با یک پیام، بدون پنل پیچیده.</li>
+    <li>پشتیبانی به فارسی (و آلمانی/انگلیسی).</li>
+  </ul>
+</div>
+
+<h2>۷. پیشنهادهای اضافه</h2>
+<div class="card ok">
+  <ol>
+    <li><strong>دموی زنده در تلگرام.</strong> یک سایت دموی آرایشگاه بساز و به مشتری بالقوه بگو «همین الان در تلگرام بنویس: قیمت کوتاهی مو بشود ۲۵ یورو» و جلوی چشمش تغییر کند. این از هر توضیحی قوی‌تر است. (فقط روی سایت دمو، نه سایت مشتری.)</li>
+    <li><strong>فرم لید را وصل کن</strong> به تلگرام و Supabase و یک ایمیل خودکار تأیید. تا این درست نشود، تبلیغ نکن.</li>
+    <li><strong>۳ مشتری اولیه با تخفیف.</strong> در ازای نظر مکتوب، اجازه نمایش سایت و عدد واقعی نتایج.</li>
+    <li><strong>تأیید قبل از اعمال.</strong> در پروژه‌ات مسیرهای <span class="ltr">pending-changes</span> و approve/reject هست. برای تغییر قیمت و تغییرهای حساس از آن استفاده کن. از لحاظ حقوقی هم ردپای تأیید مشتری را نگه می‌دارد.</li>
+    <li><strong>Google Business Profile را برای مشتری تنظیم کن.</strong> آرایشگاه‌ها و لوله‌کش‌ها بیشتر از گوگل مپ مشتری می‌گیرند تا از سایت. این یک افزونه ارزشمند و تکرارپذیر است.</li>
+    <li><strong>بازاریاب‌ها را با ابزار کار بده:</strong> یک PDF دو صفحه‌ای آلمانی با قیمت‌ها، دموی زنده، و لینک ثبت درخواست که هر لید را به بازاریاب مربوط ثبت می‌کند تا کمیسیون روشن باشد.</li>
+    <li><strong>اول فقط ۳۰ روز روی یک پکیج تمرکز کن.</strong> هر چیزی که ساخته‌ای (۲ لندینگ، قالب کلینیک، سایت نوبت، ربات) را به یک پیشنهاد روشن گره بزن، و بقیه را فعلاً کنار بگذار.</li>
+  </ol>
+</div>
+
+<h2>۸. ترتیب شروع</h2>
+<div class="card">
+  <h3>هفته ۱: ایمنی <span class="tag">اولویت</span></h3>
+  <ul>
+    <li>مجوز اقامت و کارفرما را چک کن.</li>
+    <li>یک جلسه با Finanzamt یا Steuerberater: Kleinunternehmer، §13b، پرداخت به ایران.</li>
+    <li>تصمیم بگیر تیم ایران چه کارهایی را بدون داده واقعی انجام می‌دهد.</li>
+  </ul>
+  <h3>هفته ۲ و ۳: محصول</h3>
+  <ul>
+    <li>پکیج‌ها و قیمت‌ها را نهایی کن.</li>
+    <li>pipeline تلگرام را با احراز هویت و تأیید تغییر ببند.</li>
+    <li>قرارداد و AVV نمونه را آماده کن.</li>
+  </ul>
+  <h3>هفته ۳ و ۴: سایت خودت</h3>
+  <ul>
+    <li>سایت دوزبانه فارسی و آلمانی با Impressum و Datenschutz.</li>
+    <li>سه نمونه‌کار.</li>
+  </ul>
+  <h3>ماه ۲ به بعد: فروش</h3>
+  <ul>
+    <li>۱۰ تا ۲۰ مشتری بالقوه فارسی‌زبان از شبکه شخصی و گروه‌های کسب‌وکار.</li>
+    <li>هدف: ۳ مشتری اول.</li>
+  </ul>
+</div>
+
+<h2>۹. اسکلت بیزینس پلن (Lean Canvas)</h2>
+<ol>
+  <li><strong>مشکل:</strong> صاحب‌کسب‌وکار کوچک نمی‌خواهد درگیر پنل سایت و ایمیل زدن برای هر تغییر کوچک شود.</li>
+  <li><strong>مشتری هدف:</strong> کسب‌وکارهای فارسی‌زبان در آلمان (لوله‌کشی، کلینیک، رستوران، آرایشگاه، دفتر حقوقی و غیره) و بعداً مشتری آلمانی از طریق بازاریاب‌ها.</li>
+  <li><strong>ارزش پیشنهادی:</strong> سایت حرفه‌ای + تغییرات فوری با یک پیام تلگرام.</li>
+  <li><strong>راه‌حل:</strong> سایت‌ساز + Agent پشتیبانی با تأیید و لاگ.</li>
+  <li><strong>کانال‌ها:</strong> شبکه شخصی، گروه‌های فارسی‌زبان، بازاریاب‌ها، گوگل مپ.</li>
+  <li><strong>درآمد:</strong> Setup یک‌بار + نگه‌داری ماهانه + پروژه‌های رشد.</li>
+  <li><strong>هزینه‌ها:</strong> سرور، دامنه، ابزارها، بیمه، AI، کمیسیون بازاریاب، تیم.</li>
+  <li><strong>معیارهای موفقیت:</strong> تعداد مشتری نگه‌داری ماهانه، درآمد ماهانه تکرارشونده (MRR)، نرخ ریزش.</li>
+  <li><strong>مزیت:</strong> پشتیبانی به زبان فارسی، سرعت تغییرات، قیمت شفاف.</li>
+</ol>
+
+<h2>۱۰. سؤال‌هایی که برای عددهای بیزینس پلن لازم است</h2>
+<ol>
+  <li>هزینه ثابت ماهانه تقریبی (سرور، دامنه، ابزارها، بیمه)؟</li>
+  <li>هدف درآمد ماهانه خالص؟</li>
+  <li>درصد کمیسیون بازاریاب‌ها؟</li>
+  <li>پرداخت به تیم ایران چطور و برای چه کارهایی؟</li>
+  <li>وضعیت اقامت و موافقت کارفرما؟</li>
+  <li>استک سایت و سرور؟</li>
+  <li>آدرس یا مسیر سایت نوبت‌دهی مشتری آلمانی و اجازه نمایش آن؟</li>
+  <li>اول کدام صنف: آرایشگاه یا لوله‌کشی؟</li>
+</ol>
+
+<p class="small">این سند راهنمای کلی است، نه مشاوره حقوقی یا مالیاتی. قبل از تصمیم‌های مهم با Steuerberater یا وکیل صحبت کن.</p>
+
+</div>
+</body>
+</html>
