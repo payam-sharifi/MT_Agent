@@ -401,8 +401,13 @@ def normalize_section(section: str, data: Any) -> dict:
         stats = []
         for raw in _as_list(data.get("stats")):
             value, label = text(raw.get("value"), 24), text(raw.get("label"), 60)
-            if value and label:
-                stats.append({"value": plain(value), "label": label})
+            if value or label:
+                item: dict[str, str] = {}
+                if value:
+                    item["value"] = plain(value)
+                if label:
+                    item["label"] = label
+                stats.append(item)
         _put(clean, "stats", stats[:4])
     elif section == "working_hours":
         _put(clean, "text", text(data.get("text") or data.get("hours"), 400))
@@ -438,21 +443,40 @@ def normalize_section(section: str, data: Any) -> dict:
     return {"clean": clean, "rejected": rejected, "ask_customer": ask}
 
 
+def _merge_stats(current: Any, incoming: list) -> list:
+    """Merge hero stats by label, then value, so one edited figure keeps the other rows."""
+    out = [dict(item) for item in current if isinstance(item, dict)] if isinstance(current, list) else []
+    for item in incoming:
+        if not isinstance(item, dict):
+            continue
+        label = plain(item.get("label")).casefold()
+        value = plain(item.get("value")).casefold()
+        patch = {key: val for key, val in item.items() if val not in (None, "")}
+        for index, existing in enumerate(out):
+            existing_label = plain(existing.get("label")).casefold()
+            existing_value = plain(existing.get("value")).casefold()
+            if (label and existing_label == label) or (value and existing_value == value):
+                out[index] = {**existing, **patch}
+                break
+        else:
+            out.append(item)
+    return out[:4]
+
+
 def merge_section(section: str, current: dict | None, update: dict, replace: bool = False, remove: list | None = None) -> dict:
-    """Same merge rules as clinic: lists merge by name/title/question."""
-    # Temporarily point clinic ITEM_KEYS lookup via local keys by inlining.
+    """Same merge rules as clinic: lists merge by name/title/question; hero.stats merge by label."""
     base = dict(current) if isinstance(current, dict) else {}
     base["type"] = section
     base.pop("data", None)
     for key, value in update.items():
         if section in ITEM_KEYS and key == ITEM_KEYS[section][0]:
             continue
+        if key == "stats":
+            base[key] = value if replace else _merge_stats(base.get(key), value)
         else:
             base[key] = value
     if section in ITEM_KEYS:
         list_key = ITEM_KEYS[section][0]
-        # reuse clinic merge_items which reads clinic ITEM_KEYS — so call with a
-        # section it knows, or duplicate a tiny merge here.
         current_list = base.get(list_key) or []
         incoming = update.get(list_key) or []
         items = [] if replace else [dict(x) for x in current_list if isinstance(x, dict)]
@@ -471,6 +495,15 @@ def merge_section(section: str, current: dict | None, update: dict, replace: boo
         if wanted:
             items = [x for x in items if key_of(x) not in wanted]
         base[list_key] = items
+    elif remove:
+        wanted = {str(r).strip().casefold() for r in remove if str(r).strip()}
+        if wanted and isinstance(base.get("stats"), list):
+            base["stats"] = [
+                item
+                for item in base["stats"]
+                if isinstance(item, dict)
+                and plain(item.get("label") or item.get("value")).casefold() not in wanted
+            ]
     return base
 
 

@@ -364,8 +364,9 @@ SAVE_SCHEMA = {
     "name": "save_handwerk_section",
     "description": (
         "Add or change one section of the renovation template and publish it. Lists merge by name/title/question. "
-        "Never invent project names, reviews, prices or addresses. Write titles and descriptions yourself as "
-        "{\"de\": \"...\", \"en\": \"...\"}.\n"
+        "hero.stats merge by label — send only the changed row, e.g. [{value:'6 Jahre', label:'Gewährleistung'}]; "
+        "the other figures stay. Never invent project names, reviews, prices or addresses. Write titles and "
+        "descriptions yourself as {\"de\": \"...\", \"en\": \"...\"}.\n"
         "data shape:\n"
         "- hero: {title, subtitle, cta_button, badge, bullets:[], stats:[{value,label}]}\n"
         "- services: {items:[{name, description, price}]}\n"
