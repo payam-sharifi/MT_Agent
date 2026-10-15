@@ -22,7 +22,7 @@ Tools: `handwerk_template_overview`, `activate_handwerk_template`, `save_handwer
 2. Send `https://[slug].easywebbuilder.de`.
 3. Explain in their language, in your own words:
 
-> I put the full template online with starter content so you can see every part. You can change any of it. I can change colors, photos, texts, hours, the map, reviews, services, team, projects, and more. I can also remove a section or add one back. Tell me what you want.
+> I put the full template online with starter content so you can see every part. You can change any of it. I can change colors, photos, texts, hours, the map, reviews, services, team, projects, and more. I can also remove a section or add one back. If you want to talk to the human support team, say so and I will pass your message to them.
 
 4. Proactively list what you can change (from `changeable` on `handwerk_template_overview`). Do not wait for them to guess.
 5. Wait for `تایید` / YES, then call `record_preview_confirmation(confirmed=true)`.

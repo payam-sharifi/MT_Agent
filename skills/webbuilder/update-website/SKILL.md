@@ -51,6 +51,7 @@ Pass only the fields they changed. The tool merges. Services merge by `name`. FA
 | A photo or image link, a logo | `set_site_image` (skill clinic-template / handwerk-template, Pictures). Pass `position` (1 = first) only if they said where; otherwise it goes at the end. |
 | Owner, address, tax ID, legal form | `update_legal_impressum` |
 | Look or color | `theme`: `luxury` (beauty, dark, gold), `zen` (spa, massage), `corporate` (formal), `default` (otherwise). Brand color: `primary_color` as hex (`#c45c26`). Doctors, dentists and clinics use the premium clinic template: `clinic-premium` (see the clinic-template skill; it is set automatically for medical sites). Renovation / plumber / Handwerk companies use `handwerk-premium` (see the handwerk-template skill; it is set automatically for those businesses) |
+| Talk to support / پشتیبانی / a human | `record_support_message` (skill support-chat). Do not treat it as a site edit. |
 | Delete all my data / forget me | Warn, then `wipe_user_account(confirmed=true)` only after they say yes |
 | Doctors, check-up packages, about us, locations, extra FAQ on a clinic site | `save_clinic_section` (skill clinic-template) |
 | Services, projects, team, before/after, guarantees on a renovation site | `save_handwerk_section` (skill handwerk-template) |
