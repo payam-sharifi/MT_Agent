@@ -395,7 +395,7 @@ SAVE_SCHEMA = {
         "saved: ask the customer, then call again. Write titles, subtitles and descriptions yourself, preferably as "
         "{\"de\": \"...\", \"en\": \"...\"}. Never invent names, prices, ratings, credentials, or numbers.\n"
         "data shape per section:\n"
-        "- hero: {title, subtitle, cta_button, badge, stats:[{value,label}], chief:{name,role,meta}, "
+        "- hero: {title, subtitle, cta_button, badge, stats:[{value,label}] (merge by label — send only the changed row), chief:{name,role,meta}, "
         "rating:{score,reviews}, promise:{title,text}}\n"
         "- services: {items:[{name (plain string), price, description, tags:[...], icon}]}\n"
         "- checkup: {title, subtitle, plans:[{name, price (number), old_price, desc, features:[...], featured, icon}], "

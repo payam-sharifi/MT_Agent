@@ -276,13 +276,17 @@ def _value(raw: dict) -> dict | None:
 def _stat(raw: dict) -> dict | None:
     value = number(raw.get("value"))
     label = text(raw.get("label"))
-    if value is None or not label:
+    if value is None and not label:
         return None
-    out: dict = {"value": value, "label": label}
+    out: dict = {}
+    if value is not None:
+        out["value"] = value
+    if label:
+        out["label"] = label
     suffix = raw.get("suffix")
     if isinstance(suffix, str) and suffix.strip():
         out["suffix"] = suffix.strip()[:6]
-    return out
+    return out or None
 
 
 def _doctor(raw: dict) -> tuple:
@@ -412,9 +416,14 @@ def normalize_section(section: str, data: Any) -> dict:
 def _stat_hero(raw: dict) -> dict | None:
     value = text(raw.get("value"), 24)
     label = text(raw.get("label"), 60)
-    if not value or not label:
+    if not value and not label:
         return None
-    return {"value": plain(value), "label": label}
+    out: dict = {}
+    if value:
+        out["value"] = plain(value)
+    if label:
+        out["label"] = label
+    return out
 
 
 def merge_items(section: str, current: list, incoming: list, replace: bool = False, remove: list | None = None) -> list:
@@ -473,10 +482,16 @@ def merge_section(section: str, current: dict | None, update: dict, replace: boo
 def _merge_plain_lists(current: Any, incoming: list) -> list:
     out = [dict(x) for x in current if isinstance(x, dict)] if isinstance(current, list) else []
     for item in incoming:
-        key = plain(item.get("title") or item.get("label")).casefold()
+        if not isinstance(item, dict):
+            continue
+        label = plain(item.get("title") or item.get("label")).casefold()
+        value = plain(item.get("value")).casefold()
+        patch = {key: val for key, val in item.items() if val not in (None, "")}
         for index, existing in enumerate(out):
-            if key and plain(existing.get("title") or existing.get("label")).casefold() == key:
-                out[index] = {**existing, **item}
+            existing_label = plain(existing.get("title") or existing.get("label")).casefold()
+            existing_value = plain(existing.get("value")).casefold()
+            if (label and existing_label == label) or (value and existing_value == value):
+                out[index] = {**existing, **patch}
                 break
         else:
             out.append(item)
