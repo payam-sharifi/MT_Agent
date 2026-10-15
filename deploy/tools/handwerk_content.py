@@ -12,6 +12,8 @@ from typing import Any
 
 from tools.clinic_content import (
     find_entry,
+    parse_position,
+    place_item,
     plain,
     text,
 )
@@ -207,6 +209,27 @@ ITEM_KEYS = {
     "materials": ("items", "title"),
 }
 
+# Starter rows from the template. Used when the section stub has no items yet so
+# adding one person/service does not wipe the rest of the demo list.
+DEFAULT_ITEMS: dict[str, list[dict[str, str]]] = {
+    "team": [
+        {"name": "Mira Ellermann", "role": "Gründerin"},
+        {"name": "Jonas Bergmann", "role": "Gründer"},
+        {"name": "Lena Krüger", "role": "Geschäftsführung"},
+        {"name": "Tarik Yilmaz", "role": "Beratung & Verkauf"},
+        {"name": "Sofia Brandt", "role": "Architektin"},
+        {"name": "Henrik Vogt", "role": "Projektleiter"},
+        {"name": "Nora Lindberg", "role": "Projektleiterin"},
+        {"name": "Emre Sahin", "role": "Bauleitung"},
+    ],
+    "services": [
+        {"name": "Komplettsanierung", "description": "Altbau und Bestand komplett erneuern: Grundriss, Technik, Oberflächen — schlüsselfertig."},
+        {"name": "Wohnraum-Renovierung", "description": "Küche, Wohnzimmer, Flur: moderne Materialien, ruhige Farbwelten, saubere Übergaben."},
+        {"name": "3D-Visualisierung", "description": "Sie sehen das Ergebnis, bevor der erste Hammer fällt. Änderungen noch am Bildschirm."},
+        {"name": "Staatliche Förderungen", "description": "Wir prüfen, beantragen und dokumentieren. KfW, BAFA und kommunale Programme."},
+    ],
+}
+
 HANDWERK_ONLY = {
     "guarantees", "projects", "reviews", "quality", "team",
     "before_after", "financing", "process", "contact", "footer", "materials",
@@ -322,9 +345,9 @@ def _member(raw: dict) -> tuple:
     role = text(raw.get("role") or raw.get("specialty"))
     if not name:
         return None, ["name"]
-    if not role:
-        return None, ["role"]
-    return {"name": name, "role": role}, []
+    out = {"name": name}
+    _put(out, "role", role)
+    return out, []
 
 
 def _before(raw: dict) -> tuple:
@@ -434,6 +457,9 @@ def normalize_section(section: str, data: Any) -> dict:
                 continue
             if missing:
                 ask.extend(f"{label}: {m}" for m in missing)
+            position = parse_position(raw.get("position"))
+            if position is not None:
+                item["position"] = position
             items.append(item)
         clean[list_key] = items
         if section == "contact":
@@ -510,18 +536,30 @@ def merge_section(section: str, current: dict | None, update: dict, replace: boo
         list_key = ITEM_KEYS[section][0]
         current_list = base.get(list_key) or []
         incoming = update.get(list_key) or []
-        items = [] if replace else [dict(x) for x in current_list if isinstance(x, dict)]
+        if replace:
+            items = []
+        else:
+            items = [dict(x) for x in current_list if isinstance(x, dict)]
+            if not items:
+                items = [dict(x) for x in DEFAULT_ITEMS.get(section, [])]
         field = ITEM_KEYS[section][1]
         def key_of(item: dict) -> str:
             return plain(item.get(field) or item.get("name") or item.get("title") or item.get("question")).casefold()
         for item in incoming:
-            key = key_of(item)
+            position = parse_position(item.get("position"))
+            patch = {name: value for name, value in item.items() if name != "position"}
+            key = key_of(patch)
+            found = None
             for index, existing in enumerate(items):
                 if key and key_of(existing) == key:
-                    items[index] = {**existing, **item}
+                    items[index] = {**existing, **patch}
+                    items[index].pop("position", None)
+                    found = items[index]
                     break
             else:
-                items.append(item)
+                found = dict(patch)
+                found.pop("position", None)
+            place_item(items, found, position)
         wanted = {str(r).strip().casefold() for r in (remove or []) if str(r).strip()}
         if wanted:
             items = [x for x in items if key_of(x) not in wanted]

@@ -105,6 +105,7 @@ Every picture on the site can be set or changed by the customer with `set_site_i
 
 How it works:
 - The customer sends a photo in chat and says where it goes ("this is my logo", "photo for Bleaching"). Call `set_site_image` with `file_path` exactly as it appears in the message (`Image attached at: <path>`). Never guess a path.
+- If they name a slot (`اولین عکس`, first, zweite, position 3), pass `position` (1 = first). If they do not say, omit `position` — a new card is added at the end.
 - An https image link also works (`url`). It is downloaded and stored on our side.
 - Several photos at once, or unclear where they belong: ask which photo goes where before saving.
 - The section for `service`, `doctor`, `location`, `about` must exist first. Add it with `save_clinic_section`, then set the picture.

@@ -161,6 +161,76 @@ def plain(value: Any) -> str:
     return value or ""
 
 
+_ORDINALS = {
+    "1": 1, "first": 1, "1st": 1, "erste": 1, "erster": 1, "erstes": 1, "ersten": 1,
+    "اول": 1, "اولین": 1, "اولی": 1,
+    "2": 2, "second": 2, "2nd": 2, "zweite": 2, "zweiter": 2, "zweites": 2, "zweiten": 2,
+    "دوم": 2, "دومین": 2, "دومی": 2,
+    "3": 3, "third": 3, "3rd": 3, "dritte": 3, "dritter": 3, "drittes": 3, "dritten": 3,
+    "سوم": 3, "سومین": 3, "سومی": 3,
+    "4": 4, "fourth": 4, "4th": 4, "vierte": 4, "vierter": 4, "vierten": 4,
+    "چهارم": 4, "چهارمین": 4,
+    "5": 5, "fifth": 5, "5th": 5, "fünfte": 5, "funfte": 5,
+    "پنجم": 5, "پنجمین": 5,
+    "6": 6, "sixth": 6, "6th": 6, "sechste": 6,
+    "ششم": 6, "ششمین": 6,
+    "7": 7, "seventh": 7, "7th": 7, "siebte": 7,
+    "هفتم": 7, "هفتمین": 7,
+    "8": 8, "eighth": 8, "8th": 8, "achte": 8,
+    "هشتم": 8, "هشتمین": 8,
+    "9": 9, "ninth": 9, "9th": 9, "neunte": 9,
+    "نهم": 9, "نهمین": 9,
+    "10": 10, "tenth": 10, "10th": 10, "zehnte": 10,
+    "دهم": 10, "دهمین": 10,
+    "last": -1, "letzte": -1, "letzter": -1, "آخر": -1, "آخرین": -1, "آخری": -1,
+}
+
+
+def parse_position(value: Any) -> int | None:
+    """1-based list slot. None = caller did not pick a place (append / keep). -1 = last."""
+    if value in (None, "", False):
+        return None
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, (int, float)):
+        number = int(value)
+        return None if number == 0 else number
+    raw = plain(value).casefold()
+    for noise in ("position", "slot", "platz", "index", "جایگاه", "عکس", "photo", "bild"):
+        raw = raw.replace(noise, " ")
+    raw = " ".join(raw.split())
+    if not raw:
+        return None
+    if raw in _ORDINALS:
+        return _ORDINALS[raw]
+    digits = ""
+    for char in raw:
+        if char.isdigit():
+            digits += char
+        elif digits:
+            break
+    if digits:
+        number = int(digits)
+        return None if number == 0 else number
+    return _ORDINALS.get(raw.split(" ")[0])
+
+
+def place_item(items: list, found: dict, position: int | None) -> None:
+    """Insert or move `found` in `items`. None keeps an existing row; a new row goes to the end."""
+    current = next((index for index, row in enumerate(items) if row is found), None)
+    if position is None or position == 0:
+        if current is None:
+            items.append(found)
+        return
+    if current is not None:
+        items.pop(current)
+    if position < 0:
+        items.append(found)
+        return
+    dest = min(max(position, 1), len(items) + 1) - 1
+    items.insert(dest, found)
+
+
 def number(value: Any) -> Any:
     """Number from 199, "199", "199,50 €", "ab 1.299 EUR". None when there is no number."""
     if isinstance(value, bool):
@@ -402,6 +472,9 @@ def normalize_section(section: str, data: Any) -> dict:
                 continue
             if missing:  # kept, but worth a follow-up
                 ask.extend(f"{label}: {m}" for m in missing)
+            position = parse_position(raw.get("position"))
+            if position is not None:
+                item["position"] = position
             items.append(item)
         clean[list_key] = items
         if section == "checkup":
@@ -437,15 +510,24 @@ def merge_items(section: str, current: list, incoming: list, replace: bool = Fal
             for x in incoming
         ]
     for item in incoming:
-        key = item_key(section, item)
+        if not isinstance(item, dict):
+            continue
+        position = parse_position(item.get("position"))
+        patch = {key: value for key, value in item.items() if key != "position"}
+        key = item_key(section, patch)
+        found = None
         for index, existing in enumerate(items):
             if key and item_key(section, existing) == key:
                 merged = dict(existing)
-                merged.update(item)
+                merged.update(patch)
+                merged.pop("position", None)
                 items[index] = merged
+                found = items[index]
                 break
         else:
-            items.append(item)
+            found = dict(patch)
+            found.pop("position", None)
+        place_item(items, found, position)
     wanted = {str(r).strip().casefold() for r in (remove or []) if str(r).strip()}
     if wanted:
         items = [x for x in items if item_key(section, x) not in wanted]

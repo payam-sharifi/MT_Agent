@@ -22,7 +22,8 @@ from pathlib import Path
 from typing import Any, Optional
 from urllib.parse import urlparse
 
-from tools.clinic_content import find_entry, plain
+from tools.clinic_content import find_entry, parse_position, place_item, plain
+from tools.handwerk_content import DEFAULT_ITEMS
 from tools.clinic_sections import (
     _open_website,
     _replace_entry,
@@ -239,7 +240,7 @@ def _set(entry: dict, url: str) -> None:
         entry.pop("image", None)
 
 
-def _apply(site_data: dict, content_json: dict, target: str, item: str, url: str) -> None:
+def _apply(site_data: dict, content_json: dict, target: str, item: str, url: str, position: Any = None) -> None:
     """Writes `url` ("" removes) into the right place. Raises ImageError when the place does not exist."""
     sections = _sections_of(site_data)
     if target == "logo":
@@ -267,10 +268,23 @@ def _apply(site_data: dict, content_json: dict, target: str, item: str, url: str
         _set(entry, url)
     else:
         items = [dict(x) for x in entry.get("items") or [] if isinstance(x, dict)]
-        found = _find_item(items, item, _ITEM_FIELD[target])
+        if not items:
+            items = [dict(x) for x in DEFAULT_ITEMS.get(section_type, [])]
+        slot = parse_position(position)
+        found = _find_item(items, item, _ITEM_FIELD[target]) if item else None
+        if found is None and not item and slot is not None:
+            if slot < 0:
+                found = items[-1] if items else None
+            else:
+                index = slot - 1
+                found = items[index] if 0 <= index < len(items) else None
+            if found is None:
+                raise ImageError(f"there is no {target} photo at position {slot}.")
         if found is None:
-            names = [plain(x.get(_ITEM_FIELD[target])) for x in items]
-            raise ImageError(f"no {target} named '{item}'. Existing: {', '.join(n for n in names if n) or 'none'}.")
+            if not item:
+                raise ImageError(f"item is required for target '{target}' (the {_ITEM_FIELD[target]} it belongs to)")
+            found = {_ITEM_FIELD[target]: item}
+        place_item(items, found, slot)
         _set(found, url)
         entry["items"] = items
         if target == "service":
@@ -286,12 +300,14 @@ def set_image(
     file_path: str = "",
     url: str = "",
     remove: bool = False,
+    position: Any = None,
 ) -> dict:
     target = str(target or "").strip().lower()
     if target not in TARGETS:
         return {"error": f"unknown target '{target}'", "targets": list(TARGETS)}
     item = str(item or "").strip()
-    if target in _NEEDS_ITEM and not item:
+    slot = parse_position(position)
+    if target in _NEEDS_ITEM and not item and slot is None:
         return {"error": f"item is required for target '{target}' (the {_ITEM_FIELD[target]} it belongs to)"}
 
     website, error = _open_website(sender_id, platform)
@@ -307,11 +323,11 @@ def set_image(
             if bool(file_path) == bool(url):
                 return {"error": "give exactly one of file_path (photo from the chat) or url (https image link)"}
             # Check that the place exists before uploading anything.
-            _apply(json.loads(json.dumps(site_data)), json.loads(json.dumps(content_json)), target, item, "x")
+            _apply(json.loads(json.dumps(site_data)), json.loads(json.dumps(content_json)), target, item, "x", slot)
             data = _read_local(file_path) if file_path else _download(url)
             data, mime, ext = prepare_image(data)
             public_url = _upload(str(website["id"]), target, data, mime, ext)
-        _apply(site_data, content_json, target, item, public_url)
+        _apply(site_data, content_json, target, item, public_url, slot)
     except ImageError as exc:
         return {"error": "image_not_saved", "message": str(exc)}
 
@@ -320,6 +336,7 @@ def set_image(
         "status": "success",
         "target": target,
         "item": item,
+        "position": slot,
         "removed": bool(remove),
         "image_url": public_url,
         **_result_base(website),
@@ -344,6 +361,7 @@ def _handle(args: dict, **kwargs) -> str:
             file_path=str(args.get("file_path") or ""),
             url=str(args.get("url") or ""),
             remove=bool(args.get("remove")),
+            position=args.get("position"),
         )
     except Exception as exc:
         logger.warning("set_site_image failed: %s", exc, exc_info=True)
@@ -359,6 +377,10 @@ SET_SITE_IMAGE_SCHEMA = {
         "target: logo, hero, about, quality (section photo), service (item = service name), "
         "doctor (item = doctor name), location (item = location name), project (item = project title), "
         "team (item = person name), material (item = material title).\n"
+        "Adding a photo for a new team member keeps every existing person. If that name is not on the list yet, "
+        "it is appended at the end unless you pass position (1 = first photo, 2 = second, …). "
+        "If they say اولین / first / erste, pass position. If they do not say where, omit position.\n"
+        "To change the photo already in a slot without a name, pass position only.\n"
         "For a photo sent in chat, pass file_path exactly as shown in the message ('Image attached at: <path>'). "
         "Never guess a path. If several photos arrive, ask which one goes where. Section for service/doctor/location/"
         "about must exist already (save_clinic_section first). Only JPG, PNG and WebP."
@@ -379,6 +401,14 @@ SET_SITE_IMAGE_SCHEMA = {
             "file_path": {"type": "string", "description": "Path of the photo from the chat message."},
             "url": {"type": "string", "description": "https link to an image (it is downloaded and re-hosted)."},
             "remove": {"type": "boolean", "description": "Remove the picture from that place instead of setting one."},
+            "position": {
+                "type": "integer",
+                "minimum": 1,
+                "description": (
+                    "1-based place in the list. 1 = first photo, 2 = second. "
+                    "Omit when the customer did not say where — a new item is added at the end."
+                ),
+            },
         },
         "required": ["identifier", "platform", "target"],
     },

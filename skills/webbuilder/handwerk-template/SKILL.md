@@ -67,3 +67,4 @@ Hours, phone, email, address: `update_website_content` (`contact.email` is shown
 Brand color: `update_website_content` with `primary_color` (`#c45c26`).
 Remove a section: `remove_handwerk_section`.
 Pictures: `set_site_image` (`logo`, `hero`, `quality`, `service`, `project`, `team`, `material`).
+If they say where the photo goes (`اولین عکس`, first, zweite, slot 3), pass `position` (1 = first). If they do not say, omit `position` — a new person or card is added at the end. Existing items stay.
