@@ -72,7 +72,7 @@ UPDATE_WEBSITE_CONTENT_SCHEMA = {
                 "description": (
                     "Partial content merge. hero {title, subtitle, cta_button}; "
                     "services [{name, price, description}] merged by name; "
-                    "contact {address, phone, opening_hours}; "
+                    "contact {address, phone, email, opening_hours}; "
                     "faq [{question, answer}] merged by question."
                 ),
                 "additionalProperties": True,

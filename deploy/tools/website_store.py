@@ -90,7 +90,7 @@ def empty_content() -> dict:
     return {
         "hero": {"title": "", "subtitle": "", "cta_button": ""},
         "services": [],
-        "contact": {"address": "", "phone": "", "opening_hours": ""},
+        "contact": {"address": "", "phone": "", "email": "", "opening_hours": ""},
     }
 
 
@@ -621,6 +621,10 @@ def content_from_site_data(site_data: Any) -> dict:
             for field in ("title", "subtitle", "cta_button"):
                 if _filled(section.get(field)):
                     content["hero"][field] = section[field]
+        elif section_type == "contact":
+            for src, dest in (("phone", "phone"), ("email", "email"), ("hqAddress", "address"), ("address", "address")):
+                if _filled(section.get(src)) and not _filled(content["contact"].get(dest)):
+                    content["contact"][dest] = section[src]
         elif section_type == "services" and isinstance(section.get("items"), list):
             content["services"] = section["items"]
         elif section_type == "working_hours":
@@ -634,10 +638,13 @@ def content_from_site_data(site_data: Any) -> dict:
             content["faq"] = section["items"]
     address = site_data.get("address")
     phone = site_data.get("phone")
+    email = site_data.get("email") or site_data.get("contact_email")
     if _filled(address):
         content["contact"]["address"] = address
     if _filled(phone):
         content["contact"]["phone"] = phone
+    if _filled(email):
+        content["contact"]["email"] = email
     return content
 
 
@@ -688,6 +695,9 @@ def apply_content_to_site_data(site_data: Any, content: dict, business_name: str
         data["address"] = contact["address"]
     if _filled(contact.get("phone")):
         data["phone"] = contact["phone"]
+    if _filled(contact.get("email")):
+        data["email"] = contact["email"]
+        data["contact_email"] = contact["email"]
     if business_name:
         data["business_name"] = business_name
     data["sections"] = sections

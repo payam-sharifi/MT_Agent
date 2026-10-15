@@ -113,9 +113,9 @@ CATALOG: dict[str, dict[str, Any]] = {
     "contact": {
         "label": "Kontakt & Standorte",
         "core": False,
-        "pitch": "Coverage, headquarters and branch addresses.",
+        "pitch": "Coverage, headquarters, email, phone and branch addresses.",
         "needs": ["name (customer)", "address (customer)"],
-        "optional": ["phone", "coverage", "hqAddress"],
+        "optional": ["phone", "email", "coverage", "hqAddress"],
     },
     "footer": {
         "label": "Footer-Texte",
@@ -437,10 +437,37 @@ def normalize_section(section: str, data: Any) -> dict:
             items.append(item)
         clean[list_key] = items
         if section == "contact":
-            for field in ("coverage", "hqAddress", "formNote"):
-                _put(clean, field, text(data.get(field), 200))
+            for field in ("coverage", "hqAddress", "formNote", "phone", "email"):
+                _put(clean, field, text(data.get(field), 80 if field in ("phone", "email") else 200))
 
     return {"clean": clean, "rejected": rejected, "ask_customer": ask}
+
+
+def _merge_bullets(current: Any, incoming: Any) -> list:
+    out = [plain(item) for item in current if plain(item)] if isinstance(current, list) else []
+    incoming_list = [plain(item) for item in incoming if plain(item)] if isinstance(incoming, list) else []
+    if not out or len(incoming_list) >= len(out):
+        return incoming_list[:6]
+    for item in incoming_list:
+        if item.casefold() not in {row.casefold() for row in out}:
+            out.append(item)
+    return out[:6]
+
+
+def _merge_by_field(current: Any, incoming: list, field: str) -> list:
+    out = [dict(item) for item in current if isinstance(item, dict)] if isinstance(current, list) else []
+    for item in incoming:
+        if not isinstance(item, dict):
+            continue
+        key = plain(item.get(field)).casefold()
+        patch = {name: value for name, value in item.items() if value not in (None, "")}
+        for index, existing in enumerate(out):
+            if key and plain(existing.get(field)).casefold() == key:
+                out[index] = {**existing, **patch}
+                break
+        else:
+            out.append(item)
+    return out
 
 
 def _merge_stats(current: Any, incoming: list) -> list:
@@ -473,6 +500,10 @@ def merge_section(section: str, current: dict | None, update: dict, replace: boo
             continue
         if key == "stats":
             base[key] = value if replace else _merge_stats(base.get(key), value)
+        elif key == "bullets":
+            base[key] = value if replace else _merge_bullets(base.get(key), value)
+        elif key in ("items", "hoursRows") and section in ("working_hours", "contact"):
+            base[key] = value if replace else _merge_by_field(base.get(key), value, "days")
         else:
             base[key] = value
     if section in ITEM_KEYS:

@@ -55,7 +55,7 @@ Add only what they pick. Do not push. If they say "everything", ask for the fact
 | `faq` | the facts behind each answer (insurance, languages, ...) | question and answer wording |
 | `footer` | optional: short practice description, emergency note | the text |
 
-Phone, address and opening hours of the practice go in with `update_website_content` (`contact`). They fill the header and footer automatically.
+Phone, email, address and opening hours of the practice go in with `update_website_content` (`contact`). They fill the header and footer automatically.
 
 ## How to save
 

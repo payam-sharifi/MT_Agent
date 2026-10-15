@@ -63,7 +63,7 @@ If they ask to wipe their data: warn that the account, website, and subdomain wi
 
 `save_handwerk_section(identifier, platform, section, data)`.
 
-Hours, phone, address: `update_website_content`.
+Hours, phone, email, address: `update_website_content` (`contact.email` is shown in the header, contact block and footer). You can also set email with `save_handwerk_section` on `contact`: `{ "email": "info@firma.de" }`.
 Brand color: `update_website_content` with `primary_color` (`#c45c26`).
 Remove a section: `remove_handwerk_section`.
 Pictures: `set_site_image` (`logo`, `hero`, `quality`, `service`, `project`, `team`, `material`).

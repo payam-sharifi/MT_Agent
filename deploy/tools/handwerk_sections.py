@@ -223,6 +223,18 @@ def save_section(
             if _filled(merged.get(field)) and isinstance(merged.get(field), str):
                 hero[field] = merged[field]
         content_json["hero"] = hero
+    elif section == "contact" and merged:
+        contact = dict(content_json.get("contact") or {})
+        if _filled(merged.get("phone")):
+            site_data["phone"] = merged["phone"]
+            contact["phone"] = merged["phone"]
+        if _filled(merged.get("email")):
+            site_data["email"] = merged["email"]
+            contact["email"] = merged["email"]
+        if _filled(merged.get("hqAddress")):
+            site_data["address"] = merged["hqAddress"]
+            contact["address"] = merged["hqAddress"]
+        content_json["contact"] = contact
 
     extra: dict[str, Any] = {}
     activated = False
@@ -379,7 +391,7 @@ SAVE_SCHEMA = {
         "- financing: {title, subtitle}\n"
         "- process: {items:[{title, description}]}\n"
         "- faq: {items:[{question, answer}]}\n"
-        "- contact: {coverage, hqAddress, items:[{name, address, phone}]}\n"
+        "- contact: {coverage, hqAddress, phone, email, items:[{name, address, phone}]}\n"
         "- footer: {about}\n"
         "- materials: {title, items:[{title, spec}]}\n"
         "- working_hours: {text} or {items:[{days, hours}]}"

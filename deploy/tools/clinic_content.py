@@ -380,8 +380,8 @@ def normalize_section(section: str, data: Any) -> dict:
         _put(clean, "values", values[:4])
         _put(clean, "stats", stats[:4])
     elif section == "footer":
-        for field in ("about", "emergency"):
-            _put(clean, field, text(data.get(field), 400))
+        for field in ("about", "emergency", "email", "phone"):
+            _put(clean, field, text(data.get(field), 80 if field in ("email", "phone") else 400))
     else:
         list_key, _ = ITEM_KEYS[section]
         incoming = _as_list(data.get(list_key) if data.get(list_key) is not None else data.get("items"))

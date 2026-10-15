@@ -23,7 +23,7 @@ Pass only the fields they changed. The tool merges. Services merge by `name`. FA
 {
   "hero": { "title": "", "subtitle": "", "cta_button": "" },
   "services": [{ "name": "", "price": "", "description": "" }],
-  "contact": { "address": "", "phone": "", "opening_hours": "" },
+  "contact": { "address": "", "phone": "", "email": "", "opening_hours": "" },
   "faq": [{ "question": "", "answer": "" }]
 }
 ```
@@ -45,7 +45,7 @@ Pass only the fields they changed. The tool merges. Services merge by `name`. FA
 | Business name on the current site | `business_name`, and `content.hero.title` when they are naming the page |
 | Headline, subtitle, button | `content.hero` |
 | Price or service | `content.services` item `{name, price, description}` |
-| Address, phone | `content.contact` |
+| Address, phone, email | `content.contact` |
 | Opening hours | `content.contact.opening_hours` |
 | FAQ | `content.faq` item `{question, answer}` |
 | A photo or image link, a logo | `set_site_image` (skill clinic-template, Pictures) |
