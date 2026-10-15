@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import json
 import logging
+import os
+import urllib.error
+import urllib.request
 
 from tools.registry import registry
 from tools.website_store import (
@@ -27,6 +30,82 @@ def _rows(response) -> list:
     if isinstance(data, dict):
         return [data]
     return []
+
+
+def _admin_envelope(body: str, language: str) -> str:
+    lang = str(language or "").lower()
+    if lang.startswith("de"):
+        return f"Nachricht vom Support-Team easyWeb\n\n{body}\n\nAntworten Sie einfach hier."
+    if lang.startswith("en"):
+        return (
+            f"Message from the easyWeb support team\n\n{body}\n\n"
+            "Reply here to continue the conversation."
+        )
+    return f"پیام از تیم پشتیبانی easyWeb\n\n{body}\n\nبرای جواب دادن، همین‌جا بنویسید."
+
+
+def _send_telegram(chat_id: str, text: str) -> bool:
+    token = os.environ.get("TELEGRAM_BOT_TOKEN") or ""
+    if not token or not chat_id:
+        return False
+    payload = json.dumps(
+        {
+            "chat_id": str(chat_id),
+            "text": text,
+            "disable_web_page_preview": True,
+        }
+    ).encode("utf-8")
+    request = urllib.request.Request(
+        f"https://api.telegram.org/bot{token}/sendMessage",
+        data=payload,
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=12) as response:
+            return 200 <= getattr(response, "status", 200) < 300
+    except (urllib.error.URLError, TimeoutError, OSError) as exc:
+        logger.warning("support telegram send failed: %s", exc)
+        return False
+
+
+def deliver_pending_admin_replies(user: dict, sender_id: str, platform: str) -> int:
+    if supabase is None or not user.get("id"):
+        return 0
+    chat_id = sender_id if platform == "telegram" else str(user.get("telegram_id") or "")
+    if platform != "telegram" or not chat_id:
+        return 0
+    try:
+        response = (
+            supabase.table("support_messages")
+            .select("id, sender, body, channels, platform, created_at")
+            .eq("user_id", user["id"])
+            .eq("sender", "admin")
+            .order("created_at")
+            .execute()
+        )
+    except Exception as exc:
+        logger.warning("list pending admin replies failed: %s", exc)
+        return 0
+    pending = [row for row in _rows(response) if not (row.get("channels") or [])]
+    if not pending:
+        return 0
+    sent = 0
+    language = str(user.get("language") or "fa")
+    for row in pending:
+        body = str(row.get("body") or "").strip()
+        if not body:
+            continue
+        if not _send_telegram(chat_id, _admin_envelope(body, language)):
+            continue
+        try:
+            supabase.table("support_messages").update(
+                {"channels": ["telegram"], "platform": "telegram"}
+            ).eq("id", row["id"]).execute()
+        except Exception as exc:
+            logger.warning("mark admin reply delivered failed: %s", exc)
+        sent += 1
+    return sent
 
 
 def _public(row: dict) -> dict:
@@ -55,6 +134,7 @@ def record_support_message(sender_id: str, platform: str, message: str) -> dict:
 
     websites = _websites_for_user(str(user.get("id") or ""))
     active, _needs = pick_active_website(user, websites)
+    deliver_pending_admin_replies(user, sender_id, platform)
     try:
         response = (
             supabase.table("support_messages")
@@ -107,6 +187,7 @@ def list_support_thread(sender_id: str, platform: str, limit: int = 10) -> dict:
         logger.warning("list_support_thread failed: %s", exc)
         return {"error": str(exc)}
 
+    deliver_pending_admin_replies(user, sender_id, platform)
     messages = [_public(row) for row in _rows(response)]
     messages.reverse()
     last_admin = next((item for item in reversed(messages) if item["sender"] == "admin"), None)

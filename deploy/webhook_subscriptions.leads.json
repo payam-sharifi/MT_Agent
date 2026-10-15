@@ -9,6 +9,16 @@
       "chat_id": "{chat_id}"
     }
   },
+  "support-telegram": {
+    "description": "Admin support reply to the customer's Telegram chat",
+    "events": [],
+    "prompt": "{message}",
+    "deliver": "telegram",
+    "deliver_only": true,
+    "deliver_extra": {
+      "chat_id": "{chat_id}"
+    }
+  },
   "website-lead-whatsapp": {
     "description": "Immediate website form lead to the owner's WhatsApp chat",
     "events": [],

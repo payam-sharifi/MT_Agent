@@ -28,3 +28,10 @@ create policy "support_messages select"
   on public.support_messages for select
   to anon, authenticated
   using (true);
+
+drop policy if exists "support_messages update" on public.support_messages;
+create policy "support_messages update"
+  on public.support_messages for update
+  to anon, authenticated
+  using (true)
+  with check (true);
