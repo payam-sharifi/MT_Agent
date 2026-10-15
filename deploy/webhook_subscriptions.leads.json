@@ -1,0 +1,22 @@
+{
+  "website-lead-telegram": {
+    "description": "Immediate website form lead to the owner's Telegram chat",
+    "events": [],
+    "prompt": "{message}",
+    "deliver": "telegram",
+    "deliver_only": true,
+    "deliver_extra": {
+      "chat_id": "{chat_id}"
+    }
+  },
+  "website-lead-whatsapp": {
+    "description": "Immediate website form lead to the owner's WhatsApp chat",
+    "events": [],
+    "prompt": "{message}",
+    "deliver": "whatsapp",
+    "deliver_only": true,
+    "deliver_extra": {
+      "chat_id": "{chat_id}"
+    }
+  }
+}

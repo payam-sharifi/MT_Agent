@@ -376,6 +376,83 @@ def list_websites(sender_id: str, platform: str) -> dict:
     }
 
 
+def _lead_name(fields: dict) -> str:
+    first = str(fields.get("firstName") or "").strip()
+    last = str(fields.get("lastName") or "").strip()
+    combined = " ".join(part for part in (first, last) if part)
+    return combined or str(fields.get("name") or "").strip()
+
+
+def _public_lead(row: dict, websites: list) -> dict:
+    fields = row.get("fields") if isinstance(row.get("fields"), dict) else {}
+    site = next((item for item in websites if item.get("id") == row.get("website_id")), None) or {}
+    return {
+        "id": row.get("id"),
+        "kind": row.get("kind") or "contact",
+        "created_at": row.get("created_at"),
+        "name": _lead_name(fields),
+        "email": str(fields.get("email") or "").strip(),
+        "phone": str(fields.get("phone") or "").strip(),
+        "message": str(fields.get("message") or fields.get("note") or "").strip(),
+        "fields": fields,
+        "channels": row.get("channels") or [],
+        "website_slug": str(site.get("slug") or site.get("subdomain") or ""),
+        "business_name": str(site.get("business_name") or ""),
+    }
+
+
+def list_website_leads(sender_id: str, platform: str, slug: str = "", limit: int = 10) -> dict:
+    """Contact-form enquiries stored in public.leads for this business owner."""
+    platform = normalize_platform(platform)
+    sender_id = normalize_identifier(sender_id, platform)
+    user = lookup_user_row(sender_id, platform)
+    if not user:
+        return {"error": "user_not_found"}
+
+    try:
+        cap = max(1, min(int(limit or 10), 50))
+    except (TypeError, ValueError):
+        cap = 10
+
+    websites = _websites_for_user(str(user.get("id") or ""))
+    slug = str(slug or "").strip().lower()
+    website = None
+    if slug:
+        for row in websites:
+            if str(row.get("slug") or "").lower() == slug or str(row.get("subdomain") or "").lower() == slug:
+                website = row
+                break
+        if website is None:
+            return {"error": "website_not_found", "slug": slug}
+
+    query = (
+        _client()
+        .table("leads")
+        .select("id, user_id, website_id, kind, fields, message, channels, locale, created_at")
+        .eq("user_id", user["id"])
+        .order("created_at", desc=True)
+        .limit(cap)
+    )
+    if website and website.get("id"):
+        query = query.eq("website_id", website["id"])
+    try:
+        response = query.execute()
+    except Exception as exc:
+        logger.warning("list_website_leads failed: %s", exc)
+        return {"error": str(exc)}
+
+    leads = [_public_lead(row, websites) for row in _rows(response)]
+    active, _needs = pick_active_website(user, websites)
+    chosen = website or active
+    return {
+        "status": "success",
+        "count": len(leads),
+        "website_slug": str((chosen or {}).get("slug") or (chosen or {}).get("subdomain") or ""),
+        "business_name": str((chosen or {}).get("business_name") or ""),
+        "leads": leads,
+    }
+
+
 def create_website(sender_id: str, platform: str, business_name: str, business_type: str = "") -> dict:
     account = ensure_account(sender_id, platform)
     if account.get("error"):

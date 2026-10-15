@@ -32,6 +32,9 @@ jobs:
               # The patch may already be applied with the old domain; make sure the gateway text uses the new one.
               sed -i "s/appventuregmbh\.com/easywebbuilder.de/g" gateway/run_inbound.py
 
+              echo "=== 2b. Website-lead webhook routes ==="
+              bash /root/.hermes/deploy/install-lead-webhooks.sh
+
               echo "=== 3. Restarting Hermes Gateway ==="
               pm2 restart hermes-gateway
               echo "=== Deploy Completed Successfully! ==="
